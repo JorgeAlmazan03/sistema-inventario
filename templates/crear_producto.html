@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Crear Producto</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .form-card {
+            max-width: 420px;
+            margin: auto;
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-weight: bold;
+            display: block;
+            margin-top: 15px;
+        }
+
+        input, select, button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 6px;
+            font-size: 16px;
+        }
+
+        button {
+            margin-top: 20px;
+            background: #2c3e50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #34495e;
+        }
+
+        .secondary-btn {
+            background: #7f8c8d;
+        }
+
+        .secondary-btn:hover {
+            background: #95a5a6;
+        }
+
+        .inline-btn {
+            margin-top: 10px;
+            background: #8e44ad;
+        }
+
+        .inline-btn:hover {
+            background: #9b59b6;
+        }
+        .stock-row {
+            display: flex;
+            gap: 16px;
+            margin-top: 10px;
+        }
+
+        .stock-field {
+            flex: 1;
+        }
+
+        .stock-field input {
+            width: 100%;
+            max-width: 140px; /* 🔹 tamaño controlado */
+        }
+
+        @media (max-width: 480px) {
+            .form-card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="form-card">
+    <h2>Agregar producto</h2>
+
+    <form id="productoForm">
+        <label>Producto</label>
+        <input type="text" name="producto" required>
+
+        <label>Unidad</label>
+        <select name="unidad" required>
+            <option value="kg">Kg</option>
+            <option value="piezas">Piezas</option>
+            <option value="gramos">Gramos</option>
+            <option value="litros">Litros</option>
+            <option value="paquetes">Paquetes</option>
+        </select>
+
+        <label>Categoría</label>
+        <select name="subcoleccion" id="categoriasSelect" required>
+            <option value="">Cargando categorías...</option>
+        </select>
+        <div class="stock-row">
+            <div class="stock-field">
+                <label>Stock mínimo</label>
+                <input
+                    type="number"
+                    name="stock_min"
+                    min="0"
+                    step="1"
+                    required
+                >
+            </div>
+
+            <div class="stock-field">
+                <label>Stock máximo</label>
+                <input
+                    type="number"
+                    name="stock_max"
+                    min="0"
+                    step="1"
+                    required
+                >
+            </div>
+        </div>
+        <button type="button" class="inline-btn" onclick="crearSubcoleccion()">
+            + Nueva categoría
+        </button>
+
+        <button type="submit">Crear producto</button>
+    </form>
+
+    <button class="secondary-btn"
+            onclick="window.location.href='/inventario'">
+        ← Regresar al inventario
+    </button>
+</div>
+
+<script>
+async function crearSubcoleccion() {
+    const nombre = prompt("Nombre de la nueva categoría:");
+
+    if (!nombre) return;
+
+    const subcoleccion = nombre.trim().toLowerCase();
+
+    const response = await fetch("/inventario_base/crear-subcoleccion", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subcoleccion })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        alert(data.detail || "Error al crear la categoría");
+        return;
+    }
+
+    const select = document.getElementById("subcoleccionSelect");
+
+    const option = document.createElement("option");
+    option.value = subcoleccion;
+    option.textContent = nombre;
+    option.selected = true;
+
+    select.appendChild(option);
+
+    alert("Categoría creada y seleccionada");
+}
+
+const form = document.getElementById("productoForm");
+
+form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const producto = form.producto.value.trim();
+    const unidad = form.unidad.value;
+    const subcoleccion = form.subcoleccion.value;
+    const minimo=form.stock_min.value;
+    const maximo=form.stock_max.value;
+
+    const response = await fetch(`/inventario/base/producto/${subcoleccion}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ producto, unidad,minimo,maximo })
+    });
+
+    if (response.ok) {
+        alert("Producto creado correctamente");
+        form.reset();
+    } else {
+        const data = await response.json();
+        alert(data.detail || "Error al crear producto");
+    }
+});
+async function cargarCategorias() {
+    const select = document.getElementById("categoriasSelect");
+
+    try {
+        const response = await fetch("/inventario_base/obtener-subcoleccion");
+        const categorias = await response.json();
+
+        select.innerHTML = "";
+
+        categorias.forEach(cat => {
+            const option = document.createElement("option");
+            option.value = cat;
+            option.textContent = cat.replace(/_/g, " ");
+            select.appendChild(option);
+        });
+
+    } catch (error) {
+        select.innerHTML = "<option>Error al cargar categorías</option>";
+    }
+}
+
+document.addEventListener("DOMContentLoaded", cargarCategorias);
+</script>
+
+</body>
+</html>

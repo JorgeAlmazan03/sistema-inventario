@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Inventario</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f6f8;
+    margin: 0;
+    padding: 15px;
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.dashboard {
+    max-width: 900px;
+    margin: auto;
+}
+
+.card {
+    background: white;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.card-header {
+    padding: 15px 20px;
+    background-color: #2c3e50;
+    color: white;
+    font-size: 18px;
+    display: flex;
+    justify-content: space-between;
+    cursor: pointer;
+}
+
+.card-content {
+    display: none;
+    padding: 15px 20px;
+}
+
+/* ===== PRODUCTO ===== */
+.card-content li.producto-row {
+    display: block;
+    padding: 12px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.producto-info {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    color: #999;
+    margin-bottom: 10px;
+}
+
+.producto-info input {
+    width: 60px;
+    padding: 4px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    background: #f2f2f2;
+    color: #999;
+}
+
+.producto-info.editando {
+    color: #000;
+}
+
+.producto-info.editando input {
+    background: #fff;
+    color: #000;
+}
+
+/* ===== BOTONES ===== */
+.acciones {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+}
+
+button {
+    background: #2c3e50;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #34495e;
+}
+
+.btn-delete {
+    background: #c0392b;
+}
+
+.btn-delete:hover {
+    background: #e74c3c;
+}
+
+.badge {
+    background: #3498db;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 14px;
+}
+
+/* ===== DESKTOP ===== */
+@media (min-width: 768px) {
+    .acciones {
+        justify-content: flex-end;
+    }
+}
+</style>
+
+<script>
+function toggle(id) {
+    const el = document.getElementById(id);
+    el.style.display = el.style.display === "block" ? "none" : "block";
+}
+
+function editarProducto(id) {
+    const row = document.getElementById(id);
+    row.classList.add("editando");
+    row.querySelectorAll("input").forEach(i => i.disabled = false);
+
+    document.getElementById("guardar-" + id).style.display = "inline-block";
+}
+
+async function guardarProducto(subcoleccion, producto) {
+    const row = document.getElementById(`row-${subcoleccion}-${producto}`);
+
+    const payload = {
+        unidad: row.querySelector(".unidad").value,
+        minimo: parseInt(row.querySelector(".minimo").value) || 0,
+        maximo: parseInt(row.querySelector(".maximo").value) || 0
+    };
+
+    const response = await fetch(
+        `/stocks/${subcoleccion}/${producto}/inventario`,
+        {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        }
+    );
+
+    if (response.ok) {
+        location.reload();
+    } else {
+        const data = await response.json();
+        alert(data.detail || "Error al guardar");
+    }
+}
+</script>
+</head>
+
+<body>
+
+<h1>Productos en sistema</h1>
+
+<div class="dashboard">
+{% for categoria, productos in inventario.items() %}
+<div class="card">
+    <div class="card-header" onclick="toggle('{{ categoria }}')">
+        <span>{{ categoria|capitalize }}</span>
+        <span class="badge">{{ productos|length }}</span>
+    </div>
+
+    <div class="card-content" id="{{ categoria }}">
+        <ul>
+        {% for prod in productos %}
+        <li class="producto-row">
+
+            <div class="producto-info"
+                 id="row-{{ categoria }}-{{ prod.id }}">
+                <strong>{{ prod.id }}</strong> —
+                <input class="unidad" type="text"
+                       value="{{ prod.unidad }}"
+                       disabled>
+                (
+                min:
+                <input class="minimo" type="number"
+                       value="{{ prod.minimo if prod.minimo is not none else '' }}"
+                       disabled>
+                /
+                max:
+                <input class="maximo" type="number"
+                       value="{{ prod.maximo if prod.maximo is not none else '' }}"
+                       disabled>
+                )
+            </div>
+
+            <div class="acciones">
+                <button onclick="editarProducto('row-{{ categoria }}-{{ prod.id }}')">
+                    Editar
+                </button>
+
+                <button id="guardar-row-{{ categoria }}-{{ prod.id }}"
+                        style="display:none"
+                        onclick="guardarProducto('{{ categoria }}','{{ prod.id }}')">
+                    Guardar
+                </button>
+
+                <button class="btn-delete">
+                    Eliminar
+                </button>
+            </div>
+
+        </li>
+        {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endfor %}
+
+<div style="display:flex; gap:10px; justify-content:center; margin-top:20px;">
+    <button onclick="window.location.href='/inventario/base/crear-producto'">
+        Crear producto
+    </button>
+    <button onclick="window.location.href='/inventario/crear-subcoleccion'">
+        Crear categoría
+    </button>
+    <button onclick="window.location.href='/inventario'">
+        Regresar
+    </button>
+</div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Administración</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            margin: 0;
+        }
+
+        header {
+            background: #1f2937;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        main {
+            padding: 1rem;
+            max-width: 600px;
+            margin: auto;
+        }
+
+        .card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        label {
+            margin-top: 1rem;
+            display: block;
+            font-weight: bold;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 0.7rem;
+            margin-top: 0.4rem;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            width: 100%;
+            padding: 0.9rem;
+            margin-top: 1rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .btn-primary { background: #2563eb; color: white; }
+        .btn-secondary { background: #6b7280; color: white; }
+        .btn-danger { background: #dc2626; color: white; }
+
+        .mensaje {
+            margin-top: 1rem;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .success { color: green; }
+        .error { color: red; }
+
+        .usuario-card {
+            background: #f9fafb;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 0.8rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .acciones {
+            margin-top: 0.6rem;
+        }
+
+        .acordeon-btn {
+            background: #1f2937;
+            color: white;
+            padding: 0.9rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            border: none;
+            width: 100%;
+            text-align: left;
+            margin-top: 0.5rem;
+        }
+
+        .acordeon-content {
+            display: none;
+            margin-bottom: 1.5rem;
+        }
+
+        .acordeon-content.active {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>Panel Administrativo</h1>
+</header>
+
+<main>
+    <div class="card">
+
+        <!-- CREAR USUARIO -->
+        <button class="acordeon-btn" onclick="toggleAcordeon('crearUsuario')">
+            ➕ Crear nuevo usuario
+        </button>
+
+        <div id="crearUsuario" class="acordeon-content">
+            <label>Usuario</label>
+            <input id="usuario">
+
+            <label>Nombre completo</label>
+            <input id="nombre">
+
+            <label>Contraseña</label>
+            <input id="password" type="password">
+
+            <label>Rol</label>
+            <select id="rol">
+                <option value="">Selecciona</option>
+                <option value="admin">Administrador</option>
+                <option value="empleado">Empleado</option>
+            </select>
+
+            <button class="btn-primary" onclick="crearUsuario()">
+                Crear usuario
+            </button>
+        </div>
+        <!-- AGREGAR DATOS DE ENVIO POR CORREO -->
+        <button class="acordeon-btn" onclick="abrirConfigCorreo()">
+            ➕ Agregar datos de correo
+        </button>
+
+        <div id="agregarCorreo" class="acordeon-content">
+            <label>Correo</label>
+            <input id="correo_emisor">
+
+            <label>Contraseña</label>
+            <div style="position: relative;">
+                <input id="password_correo" type="password" style="padding-right: 40px;">
+                <span onclick="togglePassword()" 
+                    style="position:absolute; right:10px; top:50%; transform:translateY(-50%); cursor:pointer;">
+                    👁
+                </span>
+            </div>
+            
+            <label>Destino</label>
+            <input id="correo_destino">
+
+            <button class="btn-primary" onclick="agregarCorreo()">
+                Agregar Correo
+            </button>
+        </div>
+
+        <!-- CREAR SUCURSAL -->
+        <button class="acordeon-btn" onclick="toggleAcordeon('crearSucursal')">
+            🏪 Crear nueva sucursal
+        </button>
+
+        <div id="crearSucursal" class="acordeon-content">
+            <label>Nombre de la sucursal</label>
+            <input id="sucursal">
+
+            <label>Encargado</label>
+            <input id="encargado">
+
+            <button class="btn-primary" onclick="crearSucursal()">
+                Crear sucursal
+            </button>
+        </div>
+
+        <!-- VER EMPLEADOS -->
+        <button class="acordeon-btn" onclick="toggleAcordeon('usuariosEmpleados'); cargarUsuariosEmpleado();">
+            👥 Ver usuarios empleados
+        </button>
+
+        <div id="usuariosEmpleados" class="acordeon-content"></div>
+
+        <button class="btn-secondary" onclick="location.href='/inventario'">
+            Regresar al inicio
+        </button>
+
+        <div id="mensaje" class="mensaje"></div>
+
+    </div>
+</main>
+
+<script>
+/* ===== Acordeón ===== */
+function toggleAcordeon(id) {
+    document.getElementById(id).classList.toggle('active');
+}
+
+/* ===== Crear usuario ===== */
+async function crearUsuario() {
+    const usuario = usuarioEl.value.trim();
+    const nombre = nombreEl.value.trim();
+    const password = passwordEl.value.trim();
+    const rol = rolEl.value;
+
+    mensaje.textContent = '';
+
+    if (!usuario || !nombre || !password || !rol) {
+        mensaje.textContent = 'Todos los campos son obligatorios';
+        mensaje.className = 'mensaje error';
+        return;
+    }
+
+    const res = await fetch('/administrativo/crear-usuario', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ usuario, nombre, password, rol })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+        mensaje.textContent = data.detail;
+        mensaje.className = 'mensaje error';
+        return;
+    }
+
+    mensaje.textContent = 'Usuario creado correctamente';
+    mensaje.className = 'mensaje success';
+
+    usuarioEl.value = '';
+    nombreEl.value = '';
+    passwordEl.value = '';
+    rolEl.value = '';
+}
+
+async function abrirConfigCorreo() {
+    toggleAcordeon('agregarCorreo');
+
+    try {
+        const res = await fetch('/administrativo/configuracion-correo');
+        const data = await res.json();
+
+        if (!res.ok) return;
+
+        document.getElementById('correo_emisor').value = data.correo || '';
+        document.getElementById('correo_destino').value = data.destino || '';
+        document.getElementById('password_correo').value = data.password || '';
+
+
+
+    } catch (error) {
+        console.error("Error cargando configuración de correo", error);
+    }
+}
+/* ==== Agregar correo ==== */
+async function agregarCorreo() {
+    const correo = document.getElementById('correo_emisor').value.trim();
+    const password = document.getElementById('password_correo').value.trim();
+    const destino = document.getElementById('correo_destino').value.trim();
+
+    mensaje.textContent = '';
+
+    // Construimos el body dinámicamente
+    const body = {};
+
+    if (correo) body.correo = correo;
+    if (password) body.password = password;
+    if (destino) body.destino = destino;
+
+    if (Object.keys(body).length === 0) {
+        mensaje.textContent = 'Debes escribir al menos un dato para actualizar';
+        mensaje.className = 'mensaje error';
+        return;
+    }
+
+    const res = await fetch('/administrativo/configurar-correo', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+        mensaje.textContent = data.detail || 'Error al guardar datos';
+        mensaje.className = 'mensaje error';
+        return;
+    }
+
+    mensaje.textContent = data.mensaje;
+    mensaje.className = 'mensaje success';
+
+    document.getElementById('correo_emisor').value = '';
+    document.getElementById('password_correo').value = '';
+    document.getElementById('correo_destino').value = '';
+}
+
+/* ===== Crear sucursal ===== */
+async function crearSucursal() {
+    const sucursal = document.getElementById('sucursal').value.trim();
+    const encargado = document.getElementById('encargado').value.trim();
+
+    mensaje.textContent = '';
+
+    if (!sucursal || !encargado) {
+        mensaje.textContent = 'Sucursal y encargado son obligatorios';
+        mensaje.className = 'mensaje error';
+        return;
+    }
+
+    const res = await fetch('/administrativo/crear-sucursal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sucursal, encargado })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+        mensaje.textContent = data.detail;
+        mensaje.className = 'mensaje error';
+        return;
+    }
+
+    mensaje.textContent = `Sucursal "${data.sucursal}" creada correctamente`;
+    mensaje.className = 'mensaje success';
+
+    document.getElementById('sucursal').value = '';
+    document.getElementById('encargado').value = '';
+}
+function togglePassword() {
+    const input = document.getElementById('password_correo');
+    input.type = input.type === 'password' ? 'text' : 'password';
+}
+/* ===== Listar empleados ===== */
+async function cargarUsuariosEmpleado() {
+    const cont = usuariosCont;
+    cont.innerHTML = 'Cargando...';
+
+    const res = await fetch('/administrativo/usuarios-existentes');
+    const usuarios = await res.json();
+
+    if (!Array.isArray(usuarios) || usuarios.length === 0) {
+        cont.innerHTML = 'No hay empleados';
+        return;
+    }
+
+    cont.innerHTML = usuarios.map(u => `
+        <div class="usuario-card">
+            <strong>${u.nombre}</strong><br>
+            Usuario: ${u.usuario}
+            <div class="acciones">
+                <button class="btn-danger"
+                    onclick="resetPassword('${u.usuario}')">
+                    Restablecer contraseña
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+/* ===== Reset password ===== */
+async function resetPassword(usuario) {
+    const nuevaPassword = prompt(
+        `Ingresa la nueva contraseña para el usuario "${usuario}":`
+    );
+
+    if (!nuevaPassword) return;
+
+    if (!confirm(`¿Confirmar cambio de contraseña para ${usuario}?`)) return;
+
+    const response = await fetch('/administrativo/reset-password', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            usuario,
+            nueva_password: nuevaPassword
+        })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        alert(data.detail || 'Error al actualizar contraseña');
+        return;
+    }
+
+    alert(data.mensaje);
+}
+
+/* ===== Elementos ===== */
+const usuarioEl = document.getElementById('usuario');
+const nombreEl = document.getElementById('nombre');
+const passwordEl = document.getElementById('password');
+const rolEl = document.getElementById('rol');
+const mensaje = document.getElementById('mensaje');
+const usuariosCont = document.getElementById('usuariosEmpleados');
+</script>
+
+</body>
+</html>

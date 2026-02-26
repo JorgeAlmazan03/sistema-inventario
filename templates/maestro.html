@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Master</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        async function logout() {
+            await fetch('/logout', { method: 'POST' });
+            window.location.href = '/';
+        }
+    </script>
+</head>
+<body>
+    Hola, si entra
+    <button onclick="logout()" style="background:#c0392b">
+            Cerrar sesión
+</body>
+</html>

@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Inventario</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f8;
+            margin: 0;
+            padding: 15px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .dashboard {
+            max-width: 900px;
+            margin: auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 15px 20px;
+            cursor: pointer;
+            background-color: #2c3e50;
+            color: white;
+            font-size: 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-header:hover {
+            background-color: #34495e;
+        }
+
+        /* COLOR ESPECIAL PARA HISTORIAL */
+        .historial-header {
+            background-color: #8e44ad;
+        }
+
+        .historial-header:hover {
+            background-color: #9b59b6;
+        }
+
+        .card-content {
+            display: none;
+            padding: 15px 20px;
+        }
+
+        .card-content ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .card-content li {
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .badge {
+            background: #3498db;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
+        /* ===== URGENTES ===== */
+        .urgente {
+            color: #c0392b;
+            font-weight: bold;
+        }
+
+        .badge-urgente {
+            background: #e74c3c;
+            font-size: 12px;
+        }
+
+        button {
+            background: #538fcbff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background: #34495e;
+        }
+
+        .actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 25px auto;
+            flex-wrap: wrap;
+        }
+
+        .actions button {
+            padding: 12px 18px;
+            border-radius: 8px;
+            min-width: 200px;
+        }
+        .urgentes-header {
+            background-color: #c0392b;
+        }
+
+        .urgentes-header:hover {
+            background-color: #e74c3c;
+        }
+
+        .urgente {
+            color: #c0392b;
+            font-weight: bold;
+        }
+
+        .badge-urgente {
+            background: #e74c3c;
+            font-size: 12px;
+        }
+        .stock-row {
+        display: flex;
+        gap: 16px;
+        margin-top: 10px;
+    }
+
+    .stock-field {
+        flex: 1;
+    }
+
+    .stock-field input {
+        width: 100%;
+        max-width: 140px; /* 🔹 tamaño controlado */
+    }
+
+        /* RESPONSIVE */
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 22px;
+            }
+
+            .card-header {
+                font-size: 16px;
+                padding: 14px;
+            }
+
+            .card-content li {
+                font-size: 15px;
+            }
+
+            .actions {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .actions button {
+                width: 100%;
+                font-size: 16px;
+            }
+        }
+    </style>
+
+    <script>
+        function toggle(id) {
+            const el = document.getElementById(id);
+            el.style.display = el.style.display === "block" ? "none" : "block";
+        }
+
+        async function logout() {
+            await fetch('/logout', { method: 'POST' });
+            window.location.href = '/';
+        }
+
+    const INVENTARIOS = {{ inventarios | tojson }};
+
+    function buscarInventariosPorFecha() {
+        const input = document.getElementById("buscarFecha").value;
+        const lista = document.getElementById("resultadoInventarios");
+
+        lista.innerHTML = "";
+
+        if (!input) return;
+
+        // yyyy-mm-dd → dd-mm-yyyy
+        const [anio, mes, dia] = input.split("-");
+        const fecha = `${dia}-${mes}-${anio}`;
+
+        const encontrados = INVENTARIOS.filter(inv =>
+            inv.startsWith(fecha)
+        );
+
+        if (encontrados.length === 0) {
+            lista.innerHTML = `
+                <li style="padding:10px; color:#777;">
+                    No hay inventarios para esa fecha
+                </li>
+            `;
+            return;
+        }
+
+        encontrados.forEach(inv => {
+            const sucursal = inv.replace(fecha + "-", "");
+
+            const li = document.createElement("li");
+            li.style.padding = "10px";
+            li.style.marginBottom = "6px";
+            li.style.background = "#f4f6f8";
+            li.style.borderRadius = "6px";
+            li.style.cursor = "pointer";
+
+            li.innerHTML = `📦 <strong>${fecha}</strong> — ${sucursal}`;
+
+            li.onclick = () => {
+                window.location.href = `/inventario/mostrar/${inv}`;
+            };
+
+            lista.appendChild(li);
+        });
+    }
+    </script>
+</head>
+
+<body>
+    <h1>Control de Inventario 1.0</h1>
+
+    <div class="actions">
+        <button onclick="window.location.href='/inventario/nuevo'">
+            Crear Inventario
+        </button>
+        <button onclick="window.location.href='/productos'">
+            Ver o agregar Productos
+        </button>
+        <button onclick="window.location.href='/administrativo'">
+            Administrativo
+        </button>
+        <button onclick="logout()" style="background:#c0392b">
+            Cerrar sesión
+        </button>
+    </div>
+
+    <h2 style="
+        text-align:center;
+        margin-bottom: 25px;
+        font-size: 18px;
+        color: #555;
+    ">
+        Inventario activo:
+        <span style="font-weight: bold; color: #2c3e50;">
+            {{ inventario_actual }}
+        </span>
+    </h2>
+
+    <div class="dashboard">
+        <!-- APARTADO URGENTES -->
+        {% set ns = namespace(total=0, hay=false) %}
+
+        <div class="card">
+            <div class="card-header urgentes-header" onclick="toggle('urgentes')">
+                🚨 Urgentes
+                <span class="badge">
+                    {% for categoria, productos in inventario.items() %}
+                        {% for prod in productos %}
+                            {% if prod.urge %}
+                                {% set ns.total = ns.total + 1 %}
+                            {% endif %}
+                        {% endfor %}
+                    {% endfor %}
+                    {{ ns.total }}
+                </span>
+            </div>
+
+            <div class="card-content" id="urgentes">
+                <ul>
+                    {% for categoria, productos in inventario.items() %}
+                        {% for prod in productos %}
+                            {% if prod.urge %}
+                                {% set ns.hay = true %}
+                                <li class="urgente">
+                                    <span>
+                                        <strong>{{ prod.id }}</strong>
+                                        — {{ "%.10g"|format(prod.existencia) }} {{ prod.unidad }}
+                                    </span>
+                                    <span class="badge badge-urgente">URGE</span>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                    {% endfor %}
+
+                    {% if not ns.hay %}
+                        <li>No hay productos urgentes 🎉</li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+
+
+
+        {% for categoria, productos in inventario.items() %}
+        <div class="card">
+            <div class="card-header" onclick="toggle('{{ categoria }}')">
+                {{ categoria|capitalize }}
+                <span class="badge">{{ productos|length }}</span>
+            </div>
+
+            <div class="card-content" id="{{ categoria }}">
+                <ul>
+                    {% for prod in productos %}
+                        <li class="{% if prod.urge %}urgente{% endif %}">
+                            <span>
+                                <strong>{{ prod.id }}</strong>
+                                — {{ "%.10g"|format(prod.existencia) }} {{ prod.unidad }}
+                            </span>
+
+                            {% if prod.urge %}
+                                <span class="badge badge-urgente">URGE</span>
+                            {% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endfor %}
+        <div style="max-width:400px; margin:0 auto 20px;">
+            <label style="font-weight:bold; display:block; margin-bottom:6px;">
+                Buscar inventarios por fecha
+            </label>
+
+            <input
+                type="date"
+                id="buscarFecha"
+                style="width:100%; padding:10px; font-size:16px;"
+                onchange="buscarInventariosPorFecha()"
+            >
+
+            <ul id="resultadoInventarios"
+                style="margin-top:12px; list-style:none; padding:0;">
+            </ul>
+        </div>
+        <div class="card">
+            <div class="card-header historial-header" onclick="toggle('historial')">
+                Historial de inventarios
+                <span class="badge">{{ inventarios|length }}</span>
+            </div>
+
+            <div class="card-content" id="historial">
+                <ul>
+                    {% for dia in inventarios %}
+                        <li style="cursor:pointer"
+                            onclick="window.location.href='/inventario/mostrar/{{ dia }}'">
+                            📅 {{ dia }}
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>

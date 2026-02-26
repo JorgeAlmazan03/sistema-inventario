@@ -1,0 +1,18 @@
+# Entorno virtual
+venv/
+
+# Cache de Python
+__pycache__/
+*.pyc
+
+# VS Code
+.vscode/
+
+# Archivos PDF generados
+*.pdf
+
+# Credenciales
+inventariocred.json
+
+# Archivos del sistema
+.DS_Store
