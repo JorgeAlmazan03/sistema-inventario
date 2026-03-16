@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Inventario</title>
+
+<style>
+
+body{
+font-family: Arial, Helvetica, sans-serif;
+background:#f4f6f9;
+margin:0;
+padding:0;
+}
+
+.container{
+max-width:900px;
+margin:auto;
+padding:30px;
+}
+
+h1{
+margin-bottom:20px;
+text-align:center;
+}
+
+.panel{
+background:white;
+padding:20px;
+border-radius:10px;
+box-shadow:0 2px 8px rgba(0,0,0,0.05);
+margin-bottom:25px;
+}
+
+select{
+padding:10px;
+font-size:14px;
+border-radius:6px;
+border:1px solid #ccc;
+width:100%;
+margin-top:10px;
+margin-bottom:20px;
+}
+
+button{
+padding:12px;
+border:none;
+border-radius:6px;
+background:#2563eb;
+color:white;
+cursor:pointer;
+font-size:14px;
+width:100%;
+margin-bottom:10px;
+}
+
+button:hover{
+background:#1e40af;
+}
+
+button.secundario{
+background:#16a34a;
+}
+
+button.secundario:hover{
+background:#15803d;
+}
+
+button.gris{
+background:#6b7280;
+}
+
+button.gris:hover{
+background:#4b5563;
+}
+
+button.logout{
+background:#dc2626;
+}
+
+button.logout:hover{
+background:#b91c1c;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>Panel de Inventario</h1>
+
+<div class="panel">
+
+<h3>Seleccionar sucursal</h3>
+
+<select id="sucursal">
+
+<option value="">Selecciona una sucursal</option>
+
+{% for s in sucursales %}
+<option value="{{ s }}">{{ s }}</option>
+{% endfor %}
+
+</select>
+
+</div>
+
+
+<div class="panel">
+
+<h3>Acciones</h3>
+
+<button onclick="crearInventario()">
+Crear inventario
+</button>
+
+<button class="secundario" onclick="entradaProducto()">
+Agregar entrada de producto
+</button>
+
+<button class="gris" onclick="verUltimo()">
+Ver último inventario
+</button>
+
+<button class="gris" onclick="verPenultimo()">
+Ver penúltimo inventario
+</button>
+
+</div>
+
+<div class="panel">
+
+<button class="logout" onclick="logout()">
+Cerrar sesión
+</button>
+
+</div>
+
+</div>
+
+
+<script>
+
+function obtenerSucursal(){
+
+const sucursal = document.getElementById("sucursal").value
+
+if(!sucursal){
+alert("Selecciona una sucursal")
+return null
+}
+
+return sucursal
+
+}
+
+
+function crearInventario(){
+
+window.location.href = `/inventario/nuevo`
+
+}
+
+
+function entradaProducto(){
+
+const sucursal = obtenerSucursal()
+if(!sucursal) return
+
+window.location.href = `/inventario/${sucursal}/entrada`
+
+}
+
+
+function verUltimo(){
+
+const sucursal = obtenerSucursal()
+if(!sucursal) return
+
+window.location.href = `/inventario/${sucursal}/ultimo`
+
+}
+
+
+function verPenultimo(){
+
+const sucursal = obtenerSucursal()
+if(!sucursal) return
+
+window.location.href = `/inventario/${sucursal}/penultimo`
+
+}
+
+
+async function logout(){
+
+await fetch("/logout",{
+method:"POST"
+})
+
+window.location.replace("/")
+
+}
+
+</script>
+
+</body>
+
+</html>

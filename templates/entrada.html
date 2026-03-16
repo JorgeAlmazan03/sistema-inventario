@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Entrada de Producto</title>
+
+<style>
+:root {
+    --primary: #2563eb;
+    --primary-dark: #1e40af;
+    --bg: #f8fafc;
+    --card: #ffffff;
+    --text: #111827;
+    --muted: #6b7280;
+    --border: #e5e7eb;
+}
+
+body {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    margin: 0;
+    padding: 1rem;
+    background: var(--bg);
+    color: var(--text);
+}
+
+h2 {
+    margin-bottom: 1.5rem;
+    font-size: 1.4rem;
+    font-weight: 600;
+}
+
+.categoria {
+    background: var(--card);
+    border-radius: 14px;
+    margin-bottom: 1.2rem;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    transition: all .2s ease;
+}
+
+.categoria-header {
+    padding: 1rem;
+    background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.categoria-header::after {
+    content: "▼";
+    font-size: 0.8rem;
+    transition: transform .2s ease;
+}
+
+.categoria-header.active::after {
+    transform: rotate(180deg);
+}
+
+.productos {
+    display: none;
+    padding: 1rem;
+    animation: fadeIn .2s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.producto {
+    display: flex;
+    flex-direction: column;
+    gap: .4rem;
+    padding: .8rem 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.producto:last-child {
+    border-bottom: none;
+}
+
+.producto-info strong {
+    font-size: 1rem;
+}
+
+.producto-info span {
+    color: var(--muted);
+    font-size: .85rem;
+}
+
+.producto input {
+    padding: .6rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    font-size: .95rem;
+    transition: border .2s ease, box-shadow .2s ease;
+}
+
+.producto input:focus {
+    outline: none;
+    border: 1px solid var(--primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, .2);
+}
+
+button {
+    position: sticky;
+    bottom: 0;
+    width: 100%;
+    padding: 1rem;
+    border: none;
+    border-radius: 12px;
+    background: var(--primary);
+    color: white;
+    font-size: 1rem;
+    font-weight: 600;
+    margin-top: 1.5rem;
+    cursor: pointer;
+    transition: background .2s ease, transform .1s ease;
+}
+
+button:hover {
+    background: var(--primary-dark);
+}
+
+button:active {
+    transform: scale(0.98);
+}
+.top-actions {
+    margin-bottom: 1rem;
+}
+
+.btn-secondary {
+    width: 100%;
+    padding: .8rem;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: white;
+    color: var(--text);
+    font-size: .95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background .2s ease, transform .1s ease;
+}
+
+.btn-secondary:hover {
+    background: #f1f5f9;
+}
+
+.btn-secondary:active {
+    transform: scale(0.98);
+}
+
+@media (min-width: 768px) {
+    .btn-secondary {
+        width: auto;
+    }
+}
+@media (min-width: 768px) {
+    body {
+        max-width: 700px;
+        margin: auto;
+    }
+
+    .producto {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .producto input {
+        width: 130px;
+    }
+}
+
+</style>
+</head>
+<body>
+<div class="top-actions">
+    <button type="button" class="btn-secondary" onclick="history.back()">
+        ← Regresar
+    </button>
+</div>
+<h2>Entrada de Producto - {{ sucursal }}</h2>
+
+<form id="entradaForm">
+
+{% for subcoleccion, productos in inventario.items() %}
+<div class="categoria">
+
+    <div class="categoria-header" onclick="toggleCategoria(this)">
+        {{ subcoleccion }}
+    </div>
+
+    <div class="productos">
+
+        {% for producto in productos %}
+        <div class="producto">
+
+            <div class="producto-info">
+                <strong>{{ producto.id }}</strong><br>
+                <span>Existencia actual: {{ producto.existencia }} {{ producto.unidad }}</span>
+            </div>
+
+            <input type="number"
+                   step="0.01"
+                   min="0"
+                   placeholder="Cantidad a ingresar"
+                   data-subcoleccion="{{ subcoleccion }}"
+                   data-producto="{{ producto.id }}">
+        </div>
+        {% endfor %}
+
+    </div>
+</div>
+{% endfor %}
+
+<button type="submit">Guardar Entradas</button>
+
+</form>
+
+<script>
+function toggleCategoria(header) {
+    const productos = header.nextElementSibling;
+    productos.style.display = productos.style.display === "block" ? "none" : "block";
+    header.classList.toggle("active");
+}
+
+document.getElementById("entradaForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+
+    let inventario = {};
+    let error = false;
+
+    document.querySelectorAll("input[type='number']").forEach(input => {
+
+        let entrada = parseFloat(input.value);
+
+        if (!entrada) return;
+
+        if (entrada < 0) {
+            error = true;
+            return;
+        }
+
+        let sub = input.dataset.subcoleccion;
+        let prod = input.dataset.producto;
+
+        if (!inventario[sub]) {
+            inventario[sub] = {};
+        }
+
+        inventario[sub][prod] = {
+            producto: prod,
+            entrada: entrada
+        };
+    });
+
+    if (error) {
+        alert("No se permiten valores negativos.");
+        return;
+    }
+
+    if (Object.keys(inventario).length === 0) {
+        alert("No ingresaste ninguna cantidad.");
+        return;
+    }
+
+    const payload = {
+        fecha: new Date().toISOString().split("T")[0],
+        notas: "",
+        inventario: inventario
+    };
+
+    const response = await fetch("/inventario/{{ sucursal }}/entrada", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+    });
+
+    if (response.ok) {
+        window.location.href = "/inventario/{{ sucursal }}/entrada";
+    } else {
+        alert("Error al guardar las entradas.");
+    }
+});
+function goBack() {
+    window.location.href = "/inventario";
+}
+</script>
+
+</body>
+</html>

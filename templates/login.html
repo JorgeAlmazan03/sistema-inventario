@@ -165,7 +165,7 @@ async function login() {
         if (data.rol === 'admin') {
             window.location.href = '/inventario';
         } else if (data.rol === 'empleado') {
-            window.location.href = '/inventario/nuevo';
+            window.location.href = '/inventario-empleado';
         } else if (data.rol === 'masteradmin') {
             window.location.href = '/maestro';
         } else {
@@ -177,6 +177,11 @@ async function login() {
         mensaje.classList.add('error');
     }
 }
+window.history.pushState(null, "", window.location.href);
+
+window.onpopstate = function () {
+    window.history.pushState(null, "", window.location.href);
+};
 </script>
 
 </body>

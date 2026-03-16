@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>{% block title %}Sistema{% endblock %}</title>
+
+<style>
+
+:root{
+--primary:#2563eb;
+--primary-dark:#1e40af;
+--bg:#f8fafc;
+--card:#ffffff;
+--border:#e5e7eb;
+--text:#111827;
+--muted:#6b7280;
+}
+
+body{
+font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
+background:var(--bg);
+margin:0;
+padding:20px;
+}
+
+.container{
+max-width:700px;
+margin:auto;
+}
+
+h2{
+margin-bottom:20px;
+}
+
+.card{
+background:var(--card);
+border:1px solid var(--border);
+border-radius:12px;
+padding:15px;
+margin-bottom:12px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+button{
+background:var(--primary);
+border:none;
+color:white;
+padding:8px 14px;
+border-radius:8px;
+cursor:pointer;
+}
+
+button:hover{
+background:var(--primary-dark);
+}
+
+.top-actions{
+margin-bottom:15px;
+}
+
+.btn-secondary{
+padding:.8rem 1rem;
+border:1px solid var(--border);
+border-radius:12px;
+background:white;
+color:var(--text);
+font-size:.95rem;
+font-weight:500;
+cursor:pointer;
+transition:background .2s ease, transform .1s ease;
+}
+
+.btn-secondary:hover{
+background:#f1f5f9;
+}
+
+.btn-secondary:active{
+transform:scale(.98);
+}
+
+.empty{
+text-align:center;
+color:var(--muted);
+margin-top:40px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="top-actions">
+<button class="btn-secondary" onclick="goBack()">
+← Regresar
+</button>
+</div>
+
+{% block content %}
+{% endblock %}
+
+</div>
+
+<script>
+
+function goBack(){
+
+if (history.length > 1){
+history.back()
+}
+else{
+window.location.href="/inventario"
+}
+
+}
+
+</script>
+
+{% block scripts %}
+{% endblock %}
+
+</body>
+</html>

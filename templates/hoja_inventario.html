@@ -1,99 +1,149 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Nuevo Inventario</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<title>Nuevo Inventario</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f4f6f8;
-            padding: 15px;
-            margin: 0;
-        }
+<style>
 
-        h1 {
-            text-align: center;
-            margin-bottom: 20px;
-        }
+body{
+font-family: Arial, sans-serif;
+background:#f4f6f8;
+padding:15px;
+margin:0;
+}
 
-        label {
-            font-weight: bold;
-        }
+/* ===== HEADER SUPERIOR ===== */
 
-        input, select {
-            padding: 10px;
-            font-size: 16px;
-            width: 100%;
-            box-sizing: border-box;
-        }
+.topbar{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:20px;
+flex-wrap:wrap;
+gap:10px;
+}
 
-        .card {
-            background: white;
-            margin-bottom: 20px;
-            padding: 15px;
-            border-radius: 10px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-        }
+h1{
+margin:0;
+font-size:24px;
+}
 
-        /* ===== DESKTOP ===== */
-        .row {
-            display: grid;
-            grid-template-columns: 2fr 90px 70px 60px 90px;
-            gap: 10px;
-            margin-bottom: 10px;
-            align-items: center;
-        }
+/* ===== FORM ===== */
 
-        .cantidad-input {
-            width: 100%;
-        }
+label{
+font-weight:bold;
+}
 
-        button {
-            padding: 14px;
-            background: #2c3e50;
-            color: white;
-            border: none;
-            cursor: pointer;
-            font-size: 18px;
-            border-radius: 8px;
-            width: 100%;
-            max-width: 400px;
-            display: block;
-            margin: 30px auto 0;
-        }
+input,select{
+padding:10px;
+font-size:16px;
+width:100%;
+box-sizing:border-box;
+border-radius:6px;
+border:1px solid #ccc;
+}
 
-        button:hover {
-            background: #34495e;
-        }
+.card{
+background:white;
+margin-bottom:20px;
+padding:15px;
+border-radius:10px;
+box-shadow:0 2px 6px rgba(0,0,0,0.1);
+}
 
-        /* ===== MOBILE ===== */
-        @media (max-width: 700px) {
+/* ===== DESKTOP ===== */
 
-            .row {
-                grid-template-columns: 1fr;
-                padding: 10px 0;
-                border-bottom: 1px solid #eee;
-            }
+.row{
+display:grid;
+grid-template-columns:2fr 90px 70px;
+gap:10px;
+margin-bottom:10px;
+align-items:center;
+}
 
-            .row strong {
-                font-size: 17px;
-            }
+.cantidad-input{
+width:100%;
+}
 
-            .row span {
-                font-size: 15px;
-            }
+/* ===== BOTONES ===== */
 
-            .row label {
-                margin-top: 8px;
-            }
-        }
-    </style>
+button{
+padding:14px;
+background:#2c3e50;
+color:white;
+border:none;
+cursor:pointer;
+font-size:18px;
+border-radius:8px;
+width:100%;
+max-width:300px;
+transition:background 0.2s ease;
+}
+
+button:hover{
+background:#34495e;
+}
+
+.btn-regresar{
+background:#7f8c8d;
+max-width:180px;
+}
+
+.btn-regresar:hover{
+background:#6c7a7a;
+}
+
+.btn-guardar{
+background:#27ae60;
+max-width:220px;
+}
+
+.btn-guardar:hover{
+background:#1f8a4c;
+}
+
+/* ===== MOBILE ===== */
+
+@media (max-width:700px){
+
+.row{
+grid-template-columns:1fr;
+padding:10px 0;
+border-bottom:1px solid #eee;
+}
+
+.row strong{
+font-size:17px;
+}
+
+.row span{
+font-size:15px;
+}
+
+}
+
+</style>
 </head>
 
 <body>
-<h1>Crear nuevo inventario</h1>
+
+<!-- BARRA SUPERIOR -->
+<div class="topbar">
+
+<button class="btn-regresar" onclick="history.back()">
+← Regresar
+</button>
+
+<h1>Crear inventario</h1>
+
+<button id="btnGuardarTop" class="btn-guardar" onclick="guardarInventario()">
+Guardar inventario
+</button>
+
+</div>
+
 
 <label>Fecha</label>
 <input id="fecha" type="text" readonly>
@@ -101,11 +151,12 @@
 <br><br>
 
 <label>Elaborado por: {{nombre}}</label>
+
 <br><br>
 
 <label>Sucursal</label>
 <select id="sucursal" required>
-    <option value="">Cargando sucursales...</option>
+<option value="">Cargando sucursales...</option>
 </select>
 
 <br><br>
@@ -115,144 +166,204 @@
 
 <br><br>
 
+
 {% for subcoleccion, productos in inventario.items() %}
+
 <div class="card">
-    <h3>{{ subcoleccion|capitalize }}</h3>
 
-    {% for prod in productos %}
-    <div class="row">
-        <strong>{{ prod.id }}</strong>
+<h3>{{ subcoleccion|capitalize }}</h3>
 
-        <input
-            type="number"
-            step="0.1"
-            value="0"
-            class="cantidad-input"
-            data-sub="{{ subcoleccion }}"
-            data-prod="{{ prod.id }}"
-        >
+{% for prod in productos %}
 
-        <span>{{ prod.unidad }}</span>
+<div class="row">
 
+<strong>{{ prod.id }}</strong>
 
-    </div>
-    {% endfor %}
+<input
+type="number"
+step="0.1"
+class="cantidad-input"
+data-sub="{{ subcoleccion }}"
+data-prod="{{ prod.id }}"
+>
+
+<span>{{ prod.unidad }}</span>
+
 </div>
+
 {% endfor %}
 
-<button type="button" onclick="guardarInventario()">
-    Guardar inventario
+</div>
+
+{% endfor %}
+
+
+<!-- BOTON GUARDAR ABAJO -->
+<div style="text-align:center;margin-top:30px">
+
+<button id="btnGuardarBottom" class="btn-guardar" onclick="guardarInventario()">
+Guardar inventario
 </button>
-<button onclick="logout()" style="background:#c0392b">
-    Cerrar sesión
-</button>
+
+</div>
+
+
 <script>
+
 const USER_ROL = "{{ rol }}";
 const NOMBRE_USUARIO = "{{ nombre }}";
 
 document.addEventListener("DOMContentLoaded", () => {
-    document.getElementById("fecha").value = fechaHoy();
-    cargarSucursales();
+document.getElementById("fecha").value = fechaHoy();
+cargarSucursales();
 });
 
-function fechaHoy() {
-    const hoy = new Date();
-    const dia = String(hoy.getDate()).padStart(2, '0');
-    const mes = String(hoy.getMonth() + 1).padStart(2, '0');
-    const anio = hoy.getFullYear();
-    return `${dia}/${mes}/${anio}`;
+function fechaHoy(){
+const hoy = new Date();
+const dia = String(hoy.getDate()).padStart(2,'0');
+const mes = String(hoy.getMonth()+1).padStart(2,'0');
+const anio = hoy.getFullYear();
+return `${dia}/${mes}/${anio}`;
 }
 
-async function guardarInventario() {
-    console.log('Click detectado');
+async function guardarInventario(){
 
-    const fecha = document.getElementById("fecha").value.trim();
-    const sucursal = document.getElementById("sucursal").value;
-    const notas = document.getElementById("notas").value.trim();
+const btnTop = document.getElementById("btnGuardarTop");
+const btnBottom = document.getElementById("btnGuardarBottom");
 
-    const inventario = {};
+if(btnTop.disabled) return;
 
-    document.querySelectorAll("input[data-sub]").forEach(input => {
-        const sub = input.dataset.sub;
-        const prod = input.dataset.prod;
-        const existencia = parseFloat(input.value) || 0;
+btnTop.disabled = true;
+btnBottom.disabled = true;
 
-        const row = input.closest(".row");
-        const unidad = row.querySelector("span")?.innerText || "";
+btnTop.innerText = "Guardando...";
+btnBottom.innerText = "Guardando...";
 
-        if (!inventario[sub]) inventario[sub] = {};
+const fecha = document.getElementById("fecha").value.trim();
+const sucursal = document.getElementById("sucursal").value;
+const notas = document.getElementById("notas").value.trim();
 
-        inventario[sub][prod] = {
-            producto: prod,
-            existencia,
-            unidad,
-            urge: false
-        };
-    });
+const inventario = {};
 
-    const payload = {
-        fecha,
-        sucursal,
-        notas,
-        inventario
-    };
+document.querySelectorAll("input[data-sub]").forEach(input=>{
 
-    console.log("JSON ENVIADO:", payload);
+const valor = input.value.trim();
+if(valor==="") return;
 
-    const response = await fetch("/inventario/crear-inventario", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-    });
+const sub = input.dataset.sub;
+const prod = input.dataset.prod;
+const existencia = parseFloat(valor);
 
-    const data = await response.json();
+const row = input.closest(".row");
+const unidad = row.querySelector("span")?.innerText || "";
 
-    if (response.ok) {
-        alert("Inventario creado correctamente");
+if(!inventario[sub]) inventario[sub] = {};
 
-        if (USER_ROL === "empleado") {
-            await fetch("/logout", { method: "POST" });
-            window.location.href = "/";
-            return;
-        }
+inventario[sub][prod] = {
+producto:prod,
+existencia,
+unidad,
+urge:false
+};
 
-        window.location.href = "/inventario";
-    } else {
-        alert(data.detail || "Error al crear inventario");
-    }
+});
+
+const payload = {
+fecha,
+sucursal,
+notas,
+inventario
+};
+
+try{
+
+const response = await fetch("/inventario/crear-inventario",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify(payload)
+});
+
+const data = await response.json();
+
+if(response.ok){
+
+btnTop.innerText = "Inventario guardado ✔";
+btnBottom.innerText = "Inventario guardado ✔";
+
+if(USER_ROL==="empleado"){
+await fetch("/logout",{method:"POST"});
+window.location.href="/";
+return;
 }
 
-async function cargarSucursales() {
-    try {
-        const response = await fetch("/inventario_base/obtener-sucursales");
-        if (!response.ok) {
-            window.location.href = "/";
-            return;
-        }
+window.location.href="/inventario";
 
-        const sucursales = await response.json();
-        const select = document.getElementById("sucursal");
-        select.innerHTML = "";
+}else{
 
-        sucursales.forEach(suc => {
-            const option = document.createElement("option");
-            option.value = suc;
-            option.textContent = suc.charAt(0).toUpperCase() + suc.slice(1);
-            select.appendChild(option);
-        });
+alert(data.detail || "Error al crear inventario");
 
-    } catch (e) {
-        console.error(e);
-        window.location.href = "/";
-    }
+btnTop.disabled=false;
+btnBottom.disabled=false;
+
+btnTop.innerText="Guardar inventario";
+btnBottom.innerText="Guardar inventario";
+
 }
 
-async function logout() {
-    await fetch('/logout', { method: 'POST' });
-    window.location.href = '/';
+}catch(error){
+
+alert("Error de conexión");
+
+btnTop.disabled=false;
+btnBottom.disabled=false;
+
+btnTop.innerText="Guardar inventario";
+btnBottom.innerText="Guardar inventario";
+
 }
+
+}
+
+async function cargarSucursales(){
+
+try{
+
+const response = await fetch("/inventario_base/obtener-sucursales");
+
+if(!response.ok){
+window.location.href="/";
+return;
+}
+
+const sucursales = await response.json();
+
+const select = document.getElementById("sucursal");
+
+select.innerHTML="";
+
+sucursales.forEach(suc=>{
+
+const option = document.createElement("option");
+
+option.value = suc;
+
+option.textContent = suc.charAt(0).toUpperCase() + suc.slice(1);
+
+select.appendChild(option);
+
+});
+
+}catch(e){
+
+console.error(e);
+
+window.location.href="/";
+
+}
+
+}
+
 </script>
-
 
 </body>
 </html>

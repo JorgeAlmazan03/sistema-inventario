@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Existencia de Producto</title>
+
+<style>
+:root {
+    --primary: #2563eb;
+    --primary-dark: #1e40af;
+    --bg: #f8fafc;
+    --card: #ffffff;
+    --text: #111827;
+    --muted: #6b7280;
+    --border: #e5e7eb;
+}
+
+body {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    margin: 0;
+    padding: 1rem;
+    background: var(--bg);
+    color: var(--text);
+}
+
+h2 {
+    margin-bottom: 1.5rem;
+    font-size: 1.4rem;
+    font-weight: 600;
+}
+
+.categoria {
+    background: var(--card);
+    border-radius: 14px;
+    margin-bottom: 1.2rem;
+    overflow: hidden;
+    border: 1px solid var(--border);
+}
+
+.categoria-header {
+    padding: 1rem;
+    background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.categoria-header::after {
+    content: "▼";
+    font-size: 0.8rem;
+    transition: transform .2s ease;
+}
+
+.categoria-header.active::after {
+    transform: rotate(180deg);
+}
+
+.productos {
+    display: none;
+    padding: 1rem;
+}
+
+.producto {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: .8rem 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.producto:last-child {
+    border-bottom: none;
+}
+
+.producto strong {
+    font-size: 1rem;
+}
+
+.existencia {
+    font-weight: 600;
+    color: var(--primary-dark);
+}
+
+.top-actions {
+    margin-bottom: 1rem;
+}
+
+.btn-secondary {
+    padding: .8rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: white;
+    cursor: pointer;
+}
+
+@media (min-width: 768px) {
+    body {
+        max-width: 700px;
+        margin: auto;
+    }
+}
+.actions {
+    margin-top: 25px;
+}
+
+.btn-primary {
+    width: 100%;
+    padding: 1rem;
+    border-radius: 12px;
+    border: none;
+    background: var(--primary);
+    color: white;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-primary:hover {
+    background: var(--primary-dark);
+}
+</style>
+</head>
+
+<body>
+
+<div class="top-actions">
+<button class="btn-secondary" onclick="history.back()">
+← Regresar
+</button>
+</div>
+
+<h2>Existencia de Producto - {{ sucursal }}</h2>
+
+{% for subcoleccion, productos in inventario.items() %}
+<div class="categoria">
+
+    <div class="categoria-header" onclick="toggleCategoria(this)">
+        {{ subcoleccion | capitalize }} ({{ productos|length }})
+    </div>
+
+    <div class="productos">
+
+        {% for producto in productos %}
+        <div class="producto">
+            <strong>{{ producto.id | capitalize }}</strong>
+
+            <span class="existencia">
+                {{ "%.10g"|format(producto.existencia) }} {{ producto.unidad }}
+            </span>
+        </div>
+        {% endfor %}
+
+    </div>
+
+</div>
+{% endfor %}
+<div class="actions">
+    <button 
+    {% if not negocio_activo %}disabled style="opacity:.5;cursor:not-allowed"{% endif %}
+    class="btn-primary" onclick="irEntrada()">
+        + Entrada de producto
+    </button>
+</div>
+<script>
+
+function toggleCategoria(header) {
+    const productos = header.nextElementSibling;
+    productos.style.display =
+        productos.style.display === "block" ? "none" : "block";
+
+    header.classList.toggle("active");
+}
+
+function goBack() {
+    window.location.href = "/inventario";
+}
+function irEntrada() {
+    window.location.href = "/inventario/{{ sucursal }}/entrada";
+}
+</script>
+
+</body>
+</html>

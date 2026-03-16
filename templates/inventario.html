@@ -1,379 +1,379 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Inventario</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<title>Inventario General</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f6f8;
-            margin: 0;
-            padding: 15px;
-        }
+<style>
+:root {
+    --primary: #2563eb;
+    --primary-dark: #1e3a8a;
+    --danger: #dc2626;
+    --bg: #f3f4f6;
+    --card: #ffffff;
+    --border: #e5e7eb;
+    --text: #111827;
+    --muted: #6b7280;
+}
 
-        h1 {
-            text-align: center;
-            margin-bottom: 20px;
-        }
+body {
+    font-family: system-ui, sans-serif;
+    background: var(--bg);
+    margin: 0;
+    padding: 20px;
+}
 
-        .dashboard {
-            max-width: 900px;
-            margin: auto;
-        }
+h1 {
+    text-align: center;
+    margin-bottom: 30px;
+}
 
-        .card {
-            background: white;
-            border-radius: 10px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-            overflow: hidden;
-        }
+/* BOTONES */
 
-        .card-header {
-            padding: 15px 20px;
-            cursor: pointer;
-            background-color: #2c3e50;
-            color: white;
-            font-size: 18px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+.actions {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    flex-wrap: wrap;
+    margin-bottom: 40px;
+}
 
-        .card-header:hover {
-            background-color: #34495e;
-        }
+.actions button {
+    padding: 12px 20px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+    color: white;
+    transition: .2s;
+    min-width: 180px;
+}
 
-        /* COLOR ESPECIAL PARA HISTORIAL */
-        .historial-header {
-            background-color: #8e44ad;
-        }
+/* botones normales */
+.actions button:not(.btn-danger) {
+    background: var(--primary);
+}
 
-        .historial-header:hover {
-            background-color: #9b59b6;
-        }
+.actions button:not(.btn-danger):hover {
+    background: var(--primary-dark);
+}
 
-        .card-content {
-            display: none;
-            padding: 15px 20px;
-        }
+/* botón peligro */
+.btn-danger {
+    background: #c0392b;
+}
 
-        .card-content ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
+.btn-danger:hover {
+    background: #e74c3c;
+}
 
-        .card-content li {
-            padding: 10px 0;
-            border-bottom: 1px solid #eee;
-            font-size: 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
-        }
+/* TARJETAS */
 
-        .badge {
-            background: #3498db;
-            color: white;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 14px;
-            white-space: nowrap;
-        }
+.container {
+    max-width: 950px;
+    margin: auto;
+}
 
-        /* ===== URGENTES ===== */
-        .urgente {
-            color: #c0392b;
-            font-weight: bold;
-        }
+.card {
+    background: var(--card);
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    margin-bottom: 20px;
+    overflow: hidden;
+}
 
-        .badge-urgente {
-            background: #e74c3c;
-            font-size: 12px;
-        }
+.header {
+    padding: 15px 20px;
+    cursor: pointer;
+    font-weight: 600;
+    background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+    color: white;
+    display: flex;
+    justify-content: space-between;
+}
 
-        button {
-            background: #538fcbff;
-            color: white;
-            border: none;
-            cursor: pointer;
-            font-size: 16px;
-        }
+.content {
+    display: none;
+    padding: 15px 20px;
+    border-top: 1px solid var(--border);
+}
 
-        button:hover {
-            background: #34495e;
-        }
+/* PRODUCTOS */
 
-        .actions {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin: 25px auto;
-            flex-wrap: wrap;
-        }
+.product {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 15px;
+}
 
-        .actions button {
-            padding: 12px 18px;
-            border-radius: 8px;
-            min-width: 200px;
-        }
-        .urgentes-header {
-            background-color: #c0392b;
-        }
+.product span:first-child {
+    font-size: 16px;
+    font-weight: 500;
+}
 
-        .urgentes-header:hover {
-            background-color: #e74c3c;
-        }
+.product:last-child {
+    border-bottom: none;
+}
 
-        .urgente {
-            color: #c0392b;
-            font-weight: bold;
-        }
+.urgente {
+    color: var(--danger);
+    font-weight: 600;
+}
 
-        .badge-urgente {
-            background: #e74c3c;
-            font-size: 12px;
-        }
-        .stock-row {
-        display: flex;
-        gap: 16px;
-        margin-top: 10px;
+.badge {
+    background: var(--primary);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 12px;
+}
+
+.badge-danger {
+    background: var(--danger);
+}
+
+/* Dropdown */
+
+.dropdown {
+    position: relative;
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 110%;
+    left: 0;
+    background: white;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    display: none;
+    min-width: 200px;
+    z-index: 100;
+}
+
+.dropdown-menu div {
+    padding: 10px 15px;
+    cursor: pointer;
+    transition: background .2s ease;
+}
+
+.dropdown-menu div:hover {
+    background: var(--bg);
+}
+
+/* RESPONSIVE */
+
+@media(max-width:600px){
+
+    body{
+        padding:15px;
     }
 
-    .stock-field {
-        flex: 1;
+    .actions {
+        flex-direction: column;
     }
 
-    .stock-field input {
+    .actions button {
         width: 100%;
-        max-width: 140px; /* 🔹 tamaño controlado */
     }
 
-        /* RESPONSIVE */
-        @media (max-width: 600px) {
-            h1 {
-                font-size: 22px;
-            }
+}
+.negocio-inactivo button:not(.btn-danger):not(.permitido){
+    opacity:.5;
+    cursor:not-allowed;
+    pointer-events:none;
+}
 
-            .card-header {
-                font-size: 16px;
-                padding: 14px;
-            }
+</style>
 
-            .card-content li {
-                font-size: 15px;
-            }
+<script>
+function toggle(id){
+    const el = document.getElementById(id);
+    el.style.display = el.style.display === "block" ? "none" : "block";
+}
+function toggleDropdownEntrada() {
+    const menu = document.getElementById("dropdownEntrada");
+    menu.style.display = menu.style.display === "block" ? "none" : "block";
+}
 
-            .actions {
-                flex-direction: column;
-                gap: 10px;
-            }
+function toggleDropdownInventarios() {
+    const menu = document.getElementById("dropdownInventarios");
+    menu.style.display = menu.style.display === "block" ? "none" : "block";
+}
 
-            .actions button {
-                width: 100%;
-                font-size: 16px;
-            }
-        }
-    </style>
+function irEntrada(sucursal) {
+    window.location.href = `/inventario/${sucursal}/entrada`;
+}
+function irInventarios(sucursal) {
+    window.location.href = `/inventario/${sucursal}/historial`;
+}
 
-    <script>
-        function toggle(id) {
-            const el = document.getElementById(id);
-            el.style.display = el.style.display === "block" ? "none" : "block";
-        }
+async function logout() {
+    await fetch('/logout', { method: 'POST' });
+    window.location.replace("/")
+}
 
-        async function logout() {
-            await fetch('/logout', { method: 'POST' });
-            window.location.href = '/';
-        }
+window.onclick = function(event) {
+    if (!event.target.closest('.dropdown')) {
 
-    const INVENTARIOS = {{ inventarios | tojson }};
+        const menus = document.querySelectorAll(".dropdown-menu");
 
-    function buscarInventariosPorFecha() {
-        const input = document.getElementById("buscarFecha").value;
-        const lista = document.getElementById("resultadoInventarios");
-
-        lista.innerHTML = "";
-
-        if (!input) return;
-
-        // yyyy-mm-dd → dd-mm-yyyy
-        const [anio, mes, dia] = input.split("-");
-        const fecha = `${dia}-${mes}-${anio}`;
-
-        const encontrados = INVENTARIOS.filter(inv =>
-            inv.startsWith(fecha)
-        );
-
-        if (encontrados.length === 0) {
-            lista.innerHTML = `
-                <li style="padding:10px; color:#777;">
-                    No hay inventarios para esa fecha
-                </li>
-            `;
-            return;
-        }
-
-        encontrados.forEach(inv => {
-            const sucursal = inv.replace(fecha + "-", "");
-
-            const li = document.createElement("li");
-            li.style.padding = "10px";
-            li.style.marginBottom = "6px";
-            li.style.background = "#f4f6f8";
-            li.style.borderRadius = "6px";
-            li.style.cursor = "pointer";
-
-            li.innerHTML = `📦 <strong>${fecha}</strong> — ${sucursal}`;
-
-            li.onclick = () => {
-                window.location.href = `/inventario/mostrar/${inv}`;
-            };
-
-            lista.appendChild(li);
+        menus.forEach(menu=>{
+            menu.style.display = "none";
         });
+
     }
-    </script>
+}
+</script>
+
 </head>
-
 <body>
-    <h1>Control de Inventario 1.0</h1>
+{% if not negocio_activo %}
+<div style="
+background:#fee2e2;
+color:#991b1b;
+padding:12px;
+border-radius:8px;
+margin-bottom:20px;
+text-align:center;
+font-weight:500;
+">
+⚠️ Este negocio está desactivado. Algunas funciones no están disponibles.
+</div>
+{% endif %}
+<h1>Inventario General</h1>
 
-    <div class="actions">
-        <button onclick="window.location.href='/inventario/nuevo'">
-            Crear Inventario
+<div class="actions {% if not negocio_activo %}negocio-inactivo{% endif %}">
+    <button onclick="window.location.href='/administrativo'">
+        Administrativo
+    </button>
+    <!--Dropdown Inventarios-->
+    <div class="dropdown">
+        <button class='permitido'onclick="toggleDropdownInventarios()">
+            Inventarios por sucursal ▾
         </button>
-        <button onclick="window.location.href='/productos'">
-            Ver o agregar Productos
+
+        <div class="dropdown-menu" id="dropdownInventarios">
+            {% for suc in inventario_general.keys() %}
+                <div onclick="irInventarios('{{ suc }}')">
+                    {{ suc }}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    <button onclick="window.location.href='/productos'">
+        Productos
+    </button>
+    <button onclick="window.location.href='/inventario/nuevo'">
+        Crear Inventario
+    </button>
+    <!-- Dropdown Entrada -->
+    <div class="dropdown">
+        <button onclick="toggleDropdownEntrada()">
+            Entrada de producto ▾
         </button>
-        <button onclick="window.location.href='/administrativo'">
-            Administrativo
-        </button>
-        <button onclick="logout()" style="background:#c0392b">
-            Cerrar sesión
-        </button>
+
+        <div class="dropdown-menu" id="dropdownEntrada">
+            {% for suc in inventario_general.keys() %}
+                <div onclick="irEntrada('{{ suc }}')">
+                    {{ suc }}
+                </div>
+            {% endfor %}
+        </div>
     </div>
 
-    <h2 style="
-        text-align:center;
-        margin-bottom: 25px;
-        font-size: 18px;
-        color: #555;
-    ">
-        Inventario activo:
-        <span style="font-weight: bold; color: #2c3e50;">
-            {{ inventario_actual }}
-        </span>
-    </h2>
+    <button class="btn-danger" onclick="logout()">
+        Cerrar sesión
+    </button>
 
-    <div class="dashboard">
-        <!-- APARTADO URGENTES -->
-        {% set ns = namespace(total=0, hay=false) %}
+</div>
 
-        <div class="card">
-            <div class="card-header urgentes-header" onclick="toggle('urgentes')">
-                🚨 Urgentes
-                <span class="badge">
-                    {% for categoria, productos in inventario.items() %}
-                        {% for prod in productos %}
-                            {% if prod.urge %}
-                                {% set ns.total = ns.total + 1 %}
-                            {% endif %}
-                        {% endfor %}
-                    {% endfor %}
-                    {{ ns.total }}
-                </span>
+<div class="container">
+
+{% if inventario_general|length == 1 %}
+
+<div class="container">
+<h2 style="
+    text-align:center;
+    font-weight:500;
+    color: var(--muted);
+    margin-top:-10px;
+    margin-bottom:40px;
+">
+    Existencia de producto por sucursal
+</h2>
+{% for sucursal, categorias in inventario_general.items() %}
+<div class="card">
+
+    <div class="header" onclick="toggle('suc_{{ loop.index }}')">
+        {{ sucursal }}
+    </div>
+
+    <div class="content" id="suc_{{ loop.index }}">
+
+        {% for categoria, productos in categorias.items() %}
+        <div class="card" style="margin-top:15px">
+
+            <div class="header"
+                 style="background:linear-gradient(90deg,#4b5563,#374151)"
+                 onclick="toggle('cat_{{ sucursal|replace(' ','_') }}_{{ categoria|replace(' ','_') }}')">
+                {{ categoria }}
             </div>
 
-            <div class="card-content" id="urgentes">
-                <ul>
-                    {% for categoria, productos in inventario.items() %}
-                        {% for prod in productos %}
-                            {% if prod.urge %}
-                                {% set ns.hay = true %}
-                                <li class="urgente">
-                                    <span>
-                                        <strong>{{ prod.id }}</strong>
-                                        — {{ "%.10g"|format(prod.existencia) }} {{ prod.unidad }}
-                                    </span>
-                                    <span class="badge badge-urgente">URGE</span>
-                                </li>
-                            {% endif %}
-                        {% endfor %}
-                    {% endfor %}
+            <div class="content" id="cat_{{ sucursal|replace(' ','_') }}_{{ categoria|replace(' ','_') }}">
 
-                    {% if not ns.hay %}
-                        <li>No hay productos urgentes 🎉</li>
+                {% for prod in productos %}
+                <div class="product {% if prod.urge %}urgente{% endif %}">
+                    <span>
+                        {{ prod.id | title }}
+                        ({{ "%.10g"|format(prod.existencia) }} {{ prod.unidad }})
+                    </span>
+
+                    {% if prod.urge %}
+                        <span class="badge badge-danger">URGE</span>
                     {% endif %}
-                </ul>
-            </div>
-        </div>
+                </div>
+                {% endfor %}
 
-
-
-        {% for categoria, productos in inventario.items() %}
-        <div class="card">
-            <div class="card-header" onclick="toggle('{{ categoria }}')">
-                {{ categoria|capitalize }}
-                <span class="badge">{{ productos|length }}</span>
-            </div>
-
-            <div class="card-content" id="{{ categoria }}">
-                <ul>
-                    {% for prod in productos %}
-                        <li class="{% if prod.urge %}urgente{% endif %}">
-                            <span>
-                                <strong>{{ prod.id }}</strong>
-                                — {{ "%.10g"|format(prod.existencia) }} {{ prod.unidad }}
-                            </span>
-
-                            {% if prod.urge %}
-                                <span class="badge badge-urgente">URGE</span>
-                            {% endif %}
-                        </li>
-                    {% endfor %}
-                </ul>
             </div>
         </div>
         {% endfor %}
-        <div style="max-width:400px; margin:0 auto 20px;">
-            <label style="font-weight:bold; display:block; margin-bottom:6px;">
-                Buscar inventarios por fecha
-            </label>
-
-            <input
-                type="date"
-                id="buscarFecha"
-                style="width:100%; padding:10px; font-size:16px;"
-                onchange="buscarInventariosPorFecha()"
-            >
-
-            <ul id="resultadoInventarios"
-                style="margin-top:12px; list-style:none; padding:0;">
-            </ul>
-        </div>
-        <div class="card">
-            <div class="card-header historial-header" onclick="toggle('historial')">
-                Historial de inventarios
-                <span class="badge">{{ inventarios|length }}</span>
-            </div>
-
-            <div class="card-content" id="historial">
-                <ul>
-                    {% for dia in inventarios %}
-                        <li style="cursor:pointer"
-                            onclick="window.location.href='/inventario/mostrar/{{ dia }}'">
-                            📅 {{ dia }}
-                        </li>
-                    {% endfor %}
-                </ul>
-            </div>
-        </div>
 
     </div>
+
+</div>
+{% endfor %}
+
+</div>
+
+{% else %}
+
+<div class="container">
+
+<h2 style="text-align:center;color:var(--muted);margin-bottom:25px;">
+Existencia de producto por sucursal
+</h2>
+
+{% for sucursal in inventario_general.keys() %}
+
+<div class="card">
+    <div class="header"
+         style="text-align:center;cursor:pointer"
+         onclick="window.location.href='/inventario/{{ sucursal }}/existencia'">
+
+        {{ sucursal }}
+
+    </div>
+</div>
+
+{% endfor %}
+
+</div>
+
+{% endif %}
+
 </body>
 </html>

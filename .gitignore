@@ -13,6 +13,7 @@ __pycache__/
 
 # Credenciales
 inventariocred.json
+.env
 
 # Archivos del sistema
 .DS_Store

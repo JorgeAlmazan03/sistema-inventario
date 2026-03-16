@@ -1,195 +1,294 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Inventario</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<title>Inventario</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f6f8;
-            margin: 0;
-            padding: 15px;
-        }
+<style>
+:root {
+    --primary: #2563eb;
+    --primary-dark: #1e3a8a;
+    --danger: #dc2626;
+    --bg: #f3f4f6;
+    --card: #ffffff;
+    --border: #e5e7eb;
+    --text: #111827;
+    --muted: #6b7280;
+}
 
-        h1 {
-            text-align: center;
-            margin-bottom: 20px;
-        }
+body {
+    font-family: system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    margin: 0;
+    padding: 20px;
+    color: var(--text);
+}
 
-        .dashboard {
-            max-width: 900px;
-            margin: auto;
-        }
+h1 {
+    text-align: center;
+    margin-bottom: 25px;
+    font-weight: 600;
+}
 
-        .card {
-            background: white;
-            border-radius: 10px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-            overflow: hidden;
-        }
+.dashboard {
+    max-width: 900px;
+    margin: auto;
+}
 
-        .card-header {
-            padding: 15px;
-            background-color: #2c3e50;
-            color: white;
-            font-size: 17px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-        }
+.card {
+    background: var(--card);
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    margin-bottom: 18px;
+    overflow: hidden;
+}
 
-        /* CARD DE URGENTES */
-        .urgentes-header {
-            background-color: #c0392b;
-        }
+.card-header {
+    padding: 14px 18px;
+    font-size: 16px;
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+    color: white;
+}
 
-        .card-content {
-            display: none;
-            padding: 15px;
-        }
+.urgentes-header {
+    background: linear-gradient(90deg, #ef4444, #b91c1c);
+}
 
-        .card-content ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
+.card-content {
+    display: none;
+    padding: 10px 18px;
+}
 
-        .card-content li {
-            padding: 10px 0;
-            border-bottom: 1px solid #eee;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
-            font-size: 16px;
-        }
+.card-content ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
 
-        .urgente {
-            color: #c0392b;
-            font-weight: bold;
-        }
+.card-content li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 15px;
+}
 
-        .badge {
-            background: #3498db;
-            color: white;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 14px;
-            white-space: nowrap;
-        }
+.card-content li:last-child {
+    border-bottom: none;
+}
 
-        .badge-urgente {
-            background: #e74c3c;
-            font-size: 12px;
-        }
+.producto-nombre {
+    font-weight: 500;
+}
 
-        .actions {
-            display: flex;
-            justify-content: center;
-            margin: 25px auto;
-        }
+.producto-existencia {
+    color: var(--muted);
+}
 
-        .actions button {
-            width: 100%;
-            max-width: 300px;
-            padding: 12px;
-            font-size: 16px;
-            border-radius: 8px;
-            background: #2c3e50;
-            color: white;
-            border: none;
-        }
+.urgente {
+    color: var(--danger);
+    font-weight: 600;
+}
 
-        @media (max-width: 600px) {
-            h1 { font-size: 22px; }
-            .card-header { font-size: 16px; }
-            .card-content li { font-size: 15px; }
-        }
-    </style>
+.badge {
+    background: var(--primary);
+    color: white;
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-size: 12px;
+}
 
-    <script>
-        function toggle(id) {
-            const el = document.getElementById(id);
-            el.style.display = el.style.display === "block" ? "none" : "block";
-        }
+.badge-urgente {
+    background: var(--danger);
+}
 
-        function cargarUrgentes() {
-            const urgentes = document.querySelectorAll("li.urgente");
-            const lista = document.getElementById("lista-urgentes");
-            const badge = document.getElementById("badge-urgentes");
+.actions {
+    display: flex;
+    justify-content: center;
+    margin: 30px auto;
+}
 
-            lista.innerHTML = "";
+.actions button {
+    padding: 12px 22px;
+    border-radius: 10px;
+    border: none;
+    background: var(--primary);
+    color: white;
+    font-size: 15px;
+    cursor: pointer;
+    transition: .2s;
+}
 
-            if (urgentes.length === 0) {
-                lista.innerHTML = "<li>No hay productos urgentes 🎉</li>";
-            } else {
-                urgentes.forEach(item => {
-                    lista.appendChild(item.cloneNode(true));
-                });
-            }
+.actions button:hover {
+    background: var(--primary-dark);
+}
 
-            badge.textContent = urgentes.length;
-        }
+.top-bar {
+    max-width: 900px;
+    margin: auto;
+    margin-bottom: 10px;
+}
 
-        window.onload = cargarUrgentes;
-    </script>
+.btn-regresar {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: .2s;
+}
+
+.btn-regresar:hover {
+    background: var(--primary-dark);
+}
+
+@media (max-width:600px){
+
+    h1 {
+        font-size: 22px;
+    }
+
+    .card-header {
+        font-size: 15px;
+    }
+
+    .card-content li {
+        font-size: 14px;
+    }
+
+}
+</style>
+
+<script>
+function toggle(id) {
+    const el = document.getElementById(id);
+    el.style.display = el.style.display === "block" ? "none" : "block";
+}
+
+function cargarUrgentes() {
+
+    const urgentes = document.querySelectorAll("li.urgente");
+    const lista = document.getElementById("lista-urgentes");
+    const badge = document.getElementById("badge-urgentes");
+
+    lista.innerHTML = "";
+
+    if (urgentes.length === 0) {
+        lista.innerHTML = "<li>No hay productos urgentes 🎉</li>";
+    } else {
+        urgentes.forEach(item => {
+            lista.appendChild(item.cloneNode(true));
+        });
+    }
+
+    badge.textContent = urgentes.length;
+}
+
+window.onload = cargarUrgentes;
+</script>
+
 </head>
 
 <body>
-    {% set partes = dia.split('-') %}
-    <h1>
-        Inventario {{ partes[0] }} de {{ partes[2] }} - {{ partes[3]|capitalize }}
-    </h1>
 
-    <div class="dashboard">
+<div class="top-bar">
+    <button class="btn-regresar" onclick="history.back()">
+        ← Regresar
+    </button>
+</div>
 
-        <!-- APARTADO URGENTES -->
-        <div class="card">
-            <div class="card-header urgentes-header" onclick="toggle('urgentes')">
-                🚨 Urgentes
-                <span class="badge" id="badge-urgentes">0</span>
-            </div>
-            <div class="card-content" id="urgentes">
-                <ul id="lista-urgentes"></ul>
-            </div>
-        </div>
+{% if dia %}
+{% set partes = dia.split('-') %}
+<h1>
+Inventario {{ partes[0] }} de {{ partes[2] }} - {{ partes[3]|capitalize }}
+</h1>
+{% else %}
+<h1>Inventario</h1>
+{% endif %}
 
-        {% for categoria, productos in inventario.items() %}
-        <div class="card">
-            <div class="card-header" onclick="toggle('{{ categoria }}')">
-                {{ categoria|capitalize }}
-                <span class="badge">{{ productos|length }}</span>
-            </div>
-
-            <div class="card-content" id="{{ categoria }}">
-                <ul>
-                    {% for prod in productos %}
-                        <li class="{% if prod.urge %}urgente{% endif %}">
-                            <span>
-                                <strong>{{ prod.id }}</strong>
-                                — {{ "%.10g"|format(prod.existencia) }} {{ prod.unidad }}
-                            </span>
-
-                            {% if prod.urge %}
-                                <span class="badge badge-urgente">URGE</span>
-                            {% endif %}
-                        </li>
-                    {% endfor %}
-                </ul>
-            </div>
-        </div>
-        {% endfor %}
-
-        <div class="actions">
-            <button onclick="window.location.href='/inventario/'">
-                Regresar al inicio
-            </button>
-        </div>
-
+{% if mensaje %}
+<div class="card">
+    <div style="padding:20px;text-align:center;font-size:18px;">
+        {{ mensaje }}
     </div>
+</div>
+{% endif %}
+
+<div class="dashboard">
+
+<!-- URGENTES -->
+<div class="card">
+    <div class="card-header urgentes-header" onclick="toggle('urgentes')">
+        🚨 Urgentes
+        <span class="badge" id="badge-urgentes">0</span>
+    </div>
+
+    <div class="card-content" id="urgentes">
+        <ul id="lista-urgentes"></ul>
+    </div>
+</div>
+
+{% if inventario %}
+
+{% for categoria, productos in inventario.items() %}
+
+<div class="card">
+
+<div class="card-header" onclick="toggle('{{ categoria }}')">
+{{ categoria|capitalize }}
+<span class="badge">{{ productos|length }}</span>
+</div>
+
+<div class="card-content" id="{{ categoria }}">
+
+<ul>
+
+{% for prod in productos %}
+
+<li class="{% if prod.urge %}urgente{% endif %}">
+
+<span class="producto-nombre">
+{{ prod.id | title }}
+</span>
+
+<span class="producto-existencia">
+{{ "%.10g"|format(prod.existencia) }} {{ prod.unidad }}
+</span>
+
+{% if prod.urge %}
+<span class="badge badge-urgente">URGE</span>
+{% endif %}
+
+</li>
+
+{% endfor %}
+
+</ul>
+
+</div>
+
+</div>
+
+{% endfor %}
+
+{% endif %}
+
+<div class="actions">
+<button onclick="window.location.href='/inventario/'">
+Regresar al inicio
+</button>
+</div>
+
+</div>
+
 </body>
 </html>

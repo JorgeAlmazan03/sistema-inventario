@@ -1,185 +1,354 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Panel Maestro</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<title>Panel Maestro</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f4f6f8;
-            margin: 0;
-            padding: 15px;
-        }
+<style>
 
-        .topbar {
-            display: flex;
-            justify-content: flex-end;
-            margin-bottom: 15px;
-        }
+body{
+    font-family: Arial, sans-serif;
+    background:#f4f6f8;
+    margin:0;
+    padding:15px;
+}
 
-        .logout-btn {
-            background: #c0392b;
-            color: white;
-            border: none;
-            padding: 10px 14px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-        }
+.topbar{
+    display:flex;
+    justify-content:flex-end;
+    margin-bottom:15px;
+}
 
-        .logout-btn:hover {
-            background: #e74c3c;
-        }
+.logout-btn{
+    background:#c0392b;
+    color:white;
+    border:none;
+    padding:10px 14px;
+    border-radius:6px;
+    cursor:pointer;
+}
 
-        .container {
-            max-width: 500px;
-            margin: auto;
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-        }
+.logout-btn:hover{
+    background:#e74c3c;
+}
 
-        h1 {
-            text-align: center;
-            margin-bottom: 20px;
-            color: #2c3e50;
-            font-size: 22px;
-        }
+.container{
+    max-width:600px;
+    margin:auto;
+    background:white;
+    padding:20px;
+    border-radius:10px;
+    box-shadow:0 4px 10px rgba(0,0,0,0.08);
+}
 
-        label {
-            font-weight: bold;
-            display: block;
-            margin-top: 15px;
-            margin-bottom: 5px;
-            font-size: 14px;
-        }
+h1{
+    text-align:center;
+    margin-bottom:20px;
+    color:#2c3e50;
+}
 
-        input {
-            width: 100%;
-            padding: 10px;
-            font-size: 15px;
-            border-radius: 6px;
-            border: 1px solid #ccc;
-            box-sizing: border-box;
-        }
+label{
+    font-weight:bold;
+    display:block;
+    margin-top:15px;
+    margin-bottom:5px;
+}
 
-        button {
-            margin-top: 20px;
-            width: 100%;
-            padding: 12px;
-            font-size: 16px;
-            border: none;
-            border-radius: 8px;
-            background: #2c3e50;
-            color: white;
-            cursor: pointer;
-        }
+input{
+    width:100%;
+    padding:10px;
+    border-radius:6px;
+    border:1px solid #ccc;
+    box-sizing:border-box;
+}
 
-        button:hover {
-            background: #34495e;
-        }
+button{
+    margin-top:20px;
+    width:100%;
+    padding:12px;
+    border:none;
+    border-radius:8px;
+    background:#2c3e50;
+    color:white;
+    cursor:pointer;
+}
 
-        .mensaje {
-            margin-top: 15px;
-            text-align: center;
-            font-size: 14px;
-        }
+button:hover{
+    background:#34495e;
+}
 
-        .error { color: #c0392b; }
-        .ok { color: #27ae60; }
+.mensaje{
+    margin-top:15px;
+    text-align:center;
+}
 
-        /* 📱 MOBILE ADJUSTMENTS */
-        @media (max-width: 480px) {
-            body {
-                padding: 10px;
-            }
+.error{color:#c0392b;}
+.ok{color:#27ae60;}
 
-            .container {
-                padding: 15px;
-                border-radius: 8px;
-            }
+/* TABLA NEGOCIOS */
 
-            h1 {
-                font-size: 20px;
-            }
+.table-container{
+    margin-top:40px;
+}
 
-            input {
-                font-size: 14px;
-                padding: 9px;
-            }
+table{
+    width:100%;
+    border-collapse:collapse;
+}
 
-            button {
-                font-size: 15px;
-                padding: 11px;
-            }
+th,td{
+    padding:10px;
+    text-align:left;
+    border-bottom:1px solid #ddd;
+}
 
-            .logout-btn {
-                padding: 8px 10px;
-                font-size: 13px;
-            }
-        }
-    </style>
+th{
+    background:#f1f3f5;
+}
+
+.estado-activo{
+    color:#27ae60;
+    font-weight:bold;
+}
+
+.estado-inactivo{
+    color:#c0392b;
+    font-weight:bold;
+}
+
+.btn-toggle{
+    padding:6px 10px;
+    border:none;
+    border-radius:6px;
+    cursor:pointer;
+    font-size:13px;
+}
+
+.btn-activar{
+    background:#27ae60;
+    color:white;
+}
+
+.btn-desactivar{
+    background:#c0392b;
+    color:white;
+}
+.btn-delete{
+    background:#c0392b;
+    color:white;
+    border:none;
+    padding:6px 12px;
+    border-radius:6px;
+    cursor:pointer;
+}
+
+.btn-delete:hover{
+    background:#e74c3c;
+}
+</style>
 </head>
+
 <body>
 
 <div class="topbar">
-    <button class="logout-btn" onclick="logout()">Cerrar sesión</button>
+<button class="logout-btn" onclick="logout()">Cerrar sesión</button>
 </div>
 
 <div class="container">
-    <h1>Crear Nuevo Negocio</h1>
 
-    <label>Nombre del negocio</label>
-    <input type="text" id="nombre" placeholder="Ej: Tacos El Güero">
+<h1>Crear Nuevo Negocio</h1>
 
-    <label>ID del negocio (único)</label>
-    <input type="text" id="negocio_id" placeholder="Ej: tacos-guero">
+<label>Nombre del negocio</label>
+<input type="text" id="nombre">
 
-    <button onclick="crearNegocio()">Crear negocio</button>
+<label>ID del negocio</label>
+<input type="text" id="negocio_id">
 
-    <div id="mensaje" class="mensaje"></div>
+<button onclick="crearNegocio()">Crear negocio</button>
+
+<div id="mensaje" class="mensaje"></div>
+
+
+<div class="table-container">
+
+<h2>Negocios existentes</h2>
+
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Nombre</th>
+<th>Estado</th>
+<th>Acción</th>
+<th>Eliminar</th>
+</tr>
+</thead>
+
+<tbody>
+
+{% for n in negocios %}
+
+<tr>
+
+<td>{{ n.id }}</td>
+<td>{{ n.nombre }}</td>
+
+<td>
+{% if n.activo %}
+<span class="estado-activo">Activo</span>
+{% else %}
+<span class="estado-inactivo">Inactivo</span>
+{% endif %}
+</td>
+
+<td>
+
+{% if n.activo %}
+
+<button
+class="btn-toggle btn-desactivar"
+onclick="cambiarEstado('{{ n.id }}', false)">
+Desactivar
+</button>
+
+{% else %}
+
+<button
+class="btn-toggle btn-activar"
+onclick="cambiarEstado('{{ n.id }}', true)">
+Activar
+</button>
+
+{% endif %}
+
+</td>
+<td>
+<button 
+class="btn-delete"
+onclick="eliminarNegocio('{{ n.id }}')">
+Eliminar
+</button>
+</td>
+</tr>
+
+{% endfor %}
+
+</tbody>
+</table>
+
+</div>
+
 </div>
 
 <script>
-async function crearNegocio() {
-    const nombre = document.getElementById("nombre").value.trim();
-    const negocio_id = document.getElementById("negocio_id").value.trim();
-    const mensaje = document.getElementById("mensaje");
 
-    mensaje.textContent = "";
-    mensaje.className = "mensaje";
+async function crearNegocio(){
 
-    if (!nombre || !negocio_id) {
-        mensaje.textContent = "Todos los campos son obligatorios";
-        mensaje.classList.add("error");
+const nombre=document.getElementById("nombre").value.trim();
+const negocio_id=document.getElementById("negocio_id").value.trim();
+const mensaje=document.getElementById("mensaje");
+
+mensaje.textContent="";
+mensaje.className="mensaje";
+
+if(!nombre||!negocio_id){
+mensaje.textContent="Todos los campos son obligatorios";
+mensaje.classList.add("error");
+return;
+}
+
+try{
+
+const response=await fetch("/madmin/crear-negocio",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({nombre,negocio_id})
+});
+
+const data=await response.json();
+
+if(response.ok){
+mensaje.textContent="Negocio creado correctamente";
+mensaje.classList.add("ok");
+
+document.getElementById("nombre").value="";
+document.getElementById("negocio_id").value="";
+
+location.reload();
+}else{
+mensaje.textContent=data.detail||"Error al crear negocio";
+mensaje.classList.add("error");
+}
+
+}catch(e){
+
+mensaje.textContent="Error de conexión";
+mensaje.classList.add("error");
+
+}
+
+}
+
+
+async function cambiarEstado(negocio_id,activo){
+
+try{
+
+const response=await fetch("/madmin/actualizar-estado",{
+method:"PUT",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
+negocio_id:negocio_id,
+activo:activo
+})
+});
+
+if(response.ok){
+location.reload();
+}else{
+alert("No se pudo actualizar el estado");
+}
+
+}catch(e){
+alert("Error de conexión");
+}
+
+}
+
+
+async function logout(){
+await fetch("/logout",{method:"POST"});
+window.location.href="/";
+}
+async function eliminarNegocio(negocio_id){
+
+    const confirmar = confirm("¿Seguro que deseas eliminar este negocio?");
+    if(!confirmar){
         return;
     }
 
-    const response = await fetch("/madmin/crear-negocio", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nombre, negocio_id })
-    });
+    try{
 
-    const data = await response.json();
+        const response = await fetch("/madmin/eliminar",{
+            method:"DELETE",
+            headers:{ "Content-Type":"application/json" },
+            body:JSON.stringify({
+                negocio_id:negocio_id
+            })
+        });
+        const data = await response.json()
+        console.log(data)
+        if(response.ok){
+            location.reload();
+        }else{
+            alert("No se pudo eliminar el negocio");
+        }
 
-    if (response.ok) {
-        mensaje.textContent = "Negocio creado correctamente ✅";
-        mensaje.classList.add("ok");
-        document.getElementById("nombre").value = "";
-        document.getElementById("negocio_id").value = "";
-    } else {
-        mensaje.textContent = data.detail || "Error al crear negocio";
-        mensaje.classList.add("error");
+    }catch(e){
+        alert("Error de conexión con el servidor");
     }
-}
 
-async function logout() {
-    await fetch("/logout", { method: "POST" });
-    window.location.href = "/";
 }
 </script>
 
