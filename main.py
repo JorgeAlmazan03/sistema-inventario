@@ -583,13 +583,18 @@ def api_crear_inventario(payload: InventarioPayload,session=Depends(requiere_ses
     fecha_real = datetime.now().strftime("%d-%m-%Y")
     inventario_id = f"{fecha_real}-{sucursal_nombre}"
 
-    doc_ref = inventario_ref_2(DB, negocio_id,sucursal, inventario_id)
+    base_id = f"{fecha_real}-{sucursal_nombre}"
+    inventario_id = base_id
+    contador = 1
 
-    if doc_ref.get().exists:
-        raise HTTPException(
-            status_code=409,
-            detail="Ya existe un inventario con esa fecha y sucursal"
-        )
+    while True:
+        doc_ref = inventario_ref_2(DB, negocio_id, sucursal, inventario_id)
+        
+        if not doc_ref.get().exists:
+            break  # ID disponible
+        
+        inventario_id = f"{base_id}({contador})"
+        contador += 1
 
     # Crear inventario principal
     doc_ref.set({
