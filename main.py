@@ -13,7 +13,7 @@ from funciones import obtener_inventario_completo_2,agregar_existencia_producto_
 from pydantic import BaseModel
 from typing import Dict, List,Optional
 from security import hash_password
-app = FastAPI(title="Agenda API")
+app = FastAPI(title="Inventario")
 app.add_middleware(
     SessionMiddleware,
     secret_key="Esta_clave_debe_Ser_seguraaa",
@@ -59,6 +59,10 @@ class StockUpdate(BaseModel):
     minimo: Optional[int] = None
     maximo: Optional[int] = None
     unidad: Optional[str] = None
+    
+@app.get("/")
+def root():
+    return {"status": "ok"}
 #Login
 @app.get("/", response_class=HTMLResponse)
 def vista_login(request: Request):
