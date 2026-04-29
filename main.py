@@ -586,7 +586,7 @@ def api_crear_inventario(payload: InventarioPayload,session=Depends(requiere_ses
 
     base_id = f"{fecha_real}-{sucursal_nombre}"
     inventario_id = base_id
-    contador = 1
+    contador = 0
 
     while True:
         doc_ref = inventario_ref_2(negocio_id, sucursal, inventario_id)
@@ -656,12 +656,12 @@ def api_crear_inventario(payload: InventarioPayload,session=Depends(requiere_ses
                 producto.existencia
             )
                 
-    inventario=obtener_inventario_completo_2(negocio_id,sucursal,inventario_id)
-    info=inventario_a_texto(fecha_real,sucursal,elaborado_por,notas,inventario)
+    #inventario=obtener_inventario_completo_2(negocio_id,sucursal,inventario_id)
+    #info=inventario_a_texto(fecha_real,sucursal,elaborado_por,notas,inventario)
     
-    ruta=f'{inventario_id}.pdf'
-    crear_pdf_inventario(info,ruta)
-    apiEnviarCorreo('Hola',ruta,session)
+    #ruta=f'{inventario_id}.pdf'
+    #crear_pdf_inventario(info,ruta)
+    #apiEnviarCorreo('Hola',ruta,session)
     return {
         "mensaje": "Inventario creado correctamente",
         "inventario_id": inventario_id
