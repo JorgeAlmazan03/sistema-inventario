@@ -1,5 +1,6 @@
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from functools import wraps
+from zoneinfo import ZoneInfo
 from firebase_admin import credentials,firestore
 from fastapi import FastAPI, Request,Body,HTTPException,Depends
 from fastapi.responses import HTMLResponse,RedirectResponse
@@ -581,12 +582,14 @@ def api_crear_inventario(payload: InventarioPayload,session=Depends(requiere_ses
     elaborado_por = session['nombre']
     notas = payload.notas.strip()
     inventario = payload.inventario
-    fecha_real = datetime.now().strftime("%d-%m-%Y")
+    tz = timezone(timedelta(hours=-7))
+    now = datetime.now(tz)
+    fecha_real = now.strftime("%d-%m-%Y")
     inventario_id = f"{fecha_real}-{sucursal_nombre}"
 
     base_id = f"{fecha_real}-{sucursal_nombre}"
     inventario_id = base_id
-    contador = 0
+    contador = 1
 
     while True:
         doc_ref = inventario_ref_2(negocio_id, sucursal, inventario_id)

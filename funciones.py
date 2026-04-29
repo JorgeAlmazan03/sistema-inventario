@@ -1049,5 +1049,3 @@ def eliminar_negocio(negocio_id):
         raise ValueError('El negocio no existe')
     ref.delete() 
 
-import datetime
-print(datetime.now())
