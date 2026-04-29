@@ -8,12 +8,13 @@ __pycache__/
 # VS Code
 .vscode/
 
-# Archivos PDF generados
+# Archivos generados
 *.pdf
+*.log
 
 # Credenciales
-inventariocred.json
 .env
+*.json
 
-# Archivos del sistema
+# Sistema
 .DS_Store
