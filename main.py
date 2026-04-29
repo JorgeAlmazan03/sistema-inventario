@@ -657,8 +657,6 @@ def api_crear_inventario(payload: InventarioPayload,session=Depends(requiere_ses
             )
                 
     inventario=obtener_inventario_completo_2(negocio_id,sucursal,inventario_id)
-    print(inventario)
-    print(comparaciones)
     info=inventario_a_texto(fecha_real,sucursal,elaborado_por,notas,inventario)
     
     ruta=f'{inventario_id}.pdf'
