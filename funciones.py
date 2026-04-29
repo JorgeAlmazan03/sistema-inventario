@@ -26,7 +26,6 @@ def get_firestore():
 
         cred = credentials.Certificate(cred_path)
         firebase_admin.initialize_app(cred)
-        print("Firebase inicializado correctamente")
 
     return firestore.client()
 
@@ -77,7 +76,7 @@ def crear_subcoleccion(subcoleccion,negocio_id):
             "producto": True
         })
     except Exception as e:
-         print('Error: ',e)
+         return e
 
 #Prueba 2
 def crear_subcoleccion_2(subcoleccion,negocio_id,sucursal):
@@ -95,7 +94,7 @@ def crear_subcoleccion_2(subcoleccion,negocio_id,sucursal):
             "producto": True
         })
     except Exception as e:
-         print('Error: ',e)
+         return e
 
 
 #Funcion final a utilizar
@@ -129,7 +128,7 @@ def crear_subcoleccion_3(subcoleccion,negocio_id,):
              })
         crear_subcoleccion(subcoleccion,negocio_id)
     except Exception as e:
-        print('Error:', e)
+        return e
 
 #Crear producto en el inventario base del producto
 def crear_producto(subcoleccion,producto,unidad,negocio_id,minimo,maximo):
@@ -312,15 +311,11 @@ def comparar_inventario_completo(negocio_id,sucursal,dia):
 
             producto_id = producto_base["id"]
             existencia_base = producto_base.get("existencia", 0)
-            print(f'existencia base: {existencia_base}')
             producto_actual = productos_actual_dict.get(producto_id)
-            print(producto_actual)
             existencia_actual = 0
             if producto_actual:
                 existencia_actual = producto_actual['existencia']
-                print(f'Existencia actual: {existencia_actual}')
             se_acabo = existencia_base - existencia_actual
-            print(se_acabo)
             resultado[subcoleccion].append({
                 "id": producto_id,
                 "se_acabo": se_acabo
@@ -1010,7 +1005,7 @@ def enviar_correo(email,contra,recipent,info,ruta_pdf):
     smtp_server.login(email,contra)  #iniciar sesion
     smtp_server.sendmail(email,recipent,mensaje.as_string())
     smtp_server.quit()
-    print('Email enviado')
+
 
 #Eliminar usuario
 #Eliminar
