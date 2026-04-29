@@ -5,8 +5,8 @@ from fastapi import FastAPI, Request,Body,HTTPException,Depends
 from fastapi.responses import HTMLResponse,RedirectResponse
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
-from funciones import DB, obtener_inventario_completo,eliminar_producto_base,crear_usuario,obtener_inventario_mas_reciente_2,obtener_penultimo_inventario
-from funciones import eliminar_subcoleccion,copiar_inventario_base_a_sucursal,lista_negocios,eliminar_negocio
+from funciones import obtener_inventario_completo,eliminar_producto_base,crear_usuario,obtener_inventario_mas_reciente_2,obtener_penultimo_inventario
+from funciones import eliminar_subcoleccion,copiar_inventario_base_a_sucursal,lista_negocios,eliminar_negocio,get_firestore
 from funciones import obtener_empleados,inventario_ref,negocio_ref,autenticar_usuario,crear_sucursal,crear_negocio,enviar_correo
 from funciones import inventario_a_texto,crear_pdf_inventario,crear_producto_3,crear_subcoleccion_3,editar_stocks_2,lista_sucursales,inventario_ref_2
 from funciones import obtener_inventario_completo_2,agregar_existencia_producto_2,entrada_de_producto,eliminar_usuario,obtener_lista_inventarios_2
@@ -60,9 +60,7 @@ class StockUpdate(BaseModel):
     maximo: Optional[int] = None
     unidad: Optional[str] = None
     
-@app.get("/")
-def root():
-    return {"status": "ok"}
+
 #Login
 @app.get("/", response_class=HTMLResponse)
 def vista_login(request: Request):
@@ -76,7 +74,7 @@ def vista_login(request: Request):
 @app.post("/login")
 def login(request: Request,payload: LoginPayload):
     user = autenticar_usuario(
-        DB,
+
         payload.negocio_id,
         payload.usuario,
         payload.password
@@ -86,7 +84,7 @@ def login(request: Request,payload: LoginPayload):
             status_code=401,
             detail="Credenciales inválidas"
         )
-    doc=negocio_ref(DB,payload.negocio_id).get()
+    doc=negocio_ref(payload.negocio_id).get()
 #    data=doc.to_dict()
 #    if not data['activo']:
 #        raise HTTPException(
@@ -102,7 +100,7 @@ def login(request: Request,payload: LoginPayload):
     request.session["ultima_actividad"] = datetime.utcnow().timestamp()
     
     usuario_ref = (
-        negocio_ref(DB, payload.negocio_id)
+        negocio_ref(payload.negocio_id)
         .collection("usuarios")
         .document(user["usuario"])
     )
@@ -191,7 +189,8 @@ def requiere_maestro(request:Request):
 
     return session
 
-def verificar_negocio_activo(db, negocio_id):
+def verificar_negocio_activo(negocio_id):
+    db = get_firestore()
     negocio_ref = db.collection("negocios").document(negocio_id).get()
 
     if not negocio_ref.exists:
@@ -213,7 +212,7 @@ def requiere_negocio_activo(func):
 
         negocio_id = session["negocio_id"]
 
-        verificar_negocio_activo(DB, negocio_id)
+        verificar_negocio_activo(negocio_id)
 
         return func(*args, **kwargs)
 
@@ -239,8 +238,8 @@ def apiPaginaPrincipal(request: Request, session=Depends(requiere_admin_html)):
         return session
 
     negocio_id = session["negocio_id"]
-    sucursales = lista_sucursales(DB, negocio_id)
-    doc = negocio_ref(DB, negocio_id).get()
+    sucursales = lista_sucursales(negocio_id)
+    doc = negocio_ref(negocio_id).get()
 
     if not doc.exists:
         raise HTTPException(404, "Negocio no encontrado")
@@ -251,7 +250,6 @@ def apiPaginaPrincipal(request: Request, session=Depends(requiere_admin_html)):
 
     for sucursal in sucursales:
         inventario_general[sucursal] = obtener_inventario_completo_2(
-            DB,
             negocio_id,
             sucursal,
             "base"
@@ -279,7 +277,7 @@ def panel_inventario(
 
     negocio_id = session["negocio_id"]
 
-    sucursales = lista_sucursales(DB, negocio_id)
+    sucursales = lista_sucursales(negocio_id)
 
     return templates.TemplateResponse(
         "inventario_empleado.html",
@@ -297,8 +295,8 @@ def apiVerProductos(request: Request,session=Depends(requiere_admin_html)):
         return session
     
     negocio_id = session["negocio_id"]
-    inventario = obtener_inventario_completo(DB,negocio_id,'base')
-    sucursales = lista_sucursales(DB, negocio_id)
+    inventario = obtener_inventario_completo(negocio_id,'base')
+    sucursales = lista_sucursales(negocio_id)
 
     return templates.TemplateResponse(
         "productos.html",
@@ -325,7 +323,7 @@ def apiAgregarProducto(
     inventario_id='base'
     try:
         ref = (
-            inventario_ref(DB,negocio_id,inventario_id)
+            inventario_ref(negocio_id,inventario_id)
               .collection(subcoleccion)
               .document(producto_id)
         )
@@ -336,7 +334,7 @@ def apiAgregarProducto(
                 detail="El producto ya existe"
             )
 
-        crear_producto_3(DB, subcoleccion, producto_id,unidad,minimo,maximo,negocio_id)
+        crear_producto_3(subcoleccion, producto_id,unidad,minimo,maximo,negocio_id)
 
         return {
             "mensaje": "Producto creado correctamente",
@@ -356,7 +354,7 @@ def obtener_stocks_completos(session=Depends(requiere_admin_api)):
     resultado = {}
 
     sucursales_ref = (
-        negocio_ref(DB, negocio_id)
+        negocio_ref(negocio_id)
         .collection("sucursales")
         .stream()
     )
@@ -364,7 +362,7 @@ def obtener_stocks_completos(session=Depends(requiere_admin_api)):
     for suc_doc in sucursales_ref:
         sucursal = suc_doc.id
 
-        inventario_ref_suc = inventario_ref_2(DB, negocio_id, sucursal, "base")
+        inventario_ref_suc = inventario_ref_2(negocio_id, sucursal, "base")
 
         categorias = inventario_ref_suc.collections()
 
@@ -401,7 +399,7 @@ def apiEditarStock(
     inventario_id='base'
     try:
         ref = (
-            inventario_ref(DB,negocio_id,inventario_id)
+            inventario_ref(negocio_id,inventario_id)
               .collection(subcoleccion)
               .document(producto_id)
         )
@@ -410,7 +408,6 @@ def apiEditarStock(
             raise HTTPException(status_code=404, detail="Producto no existe")
 
         editar_stocks_2(
-            DB,
             negocio_id,
             sucursal,
             subcoleccion,
@@ -459,7 +456,7 @@ def apiAgregarSubcoleccion(
     inventario_id='base'
     try:
         ref = (
-            inventario_ref(DB,negocio_id,inventario_id)
+            inventario_ref(negocio_id,inventario_id)
               .collection(subcoleccion)
         )
 #Validar que la subcoleccion todavia no exista
@@ -471,7 +468,7 @@ def apiAgregarSubcoleccion(
                 detail="La subcolección ya existe"
             )
 
-        crear_subcoleccion_3(DB,subcoleccion,negocio_id)
+        crear_subcoleccion_3(subcoleccion,negocio_id)
 
         return {
             "mensaje": "Subcoleccion creada correctamente",
@@ -492,7 +489,7 @@ def listar_subcolecciones(session=Depends(requiere_sesion)):
     inventario_id='base'
     try:
         colecciones = (
-            inventario_ref(DB,negocio_id,inventario_id)
+            inventario_ref(negocio_id,inventario_id)
               .collections()
         )
 
@@ -511,7 +508,7 @@ def listar_subcolecciones(session=Depends(requiere_sesion)):
 def apiEliminarSubcoleccion(subcoleccion: str,session=Depends(requiere_admin_api)):
     negocio_id = session["negocio_id"]
     try:
-        eliminar_subcoleccion(DB, negocio_id,subcoleccion)
+        eliminar_subcoleccion(negocio_id,subcoleccion)
 
         return {
             "mensaje": "Categoría eliminada correctamente",
@@ -557,7 +554,7 @@ def nuevo_inventario(
         return session
     
     negocio_id = session["negocio_id"]
-    inventario = obtener_inventario_completo(DB, negocio_id, inventario_id)
+    inventario = obtener_inventario_completo(negocio_id, inventario_id)
 
     return templates.TemplateResponse(
         "hoja_inventario.html",
@@ -592,7 +589,7 @@ def api_crear_inventario(payload: InventarioPayload,session=Depends(requiere_ses
     contador = 1
 
     while True:
-        doc_ref = inventario_ref_2(DB, negocio_id, sucursal, inventario_id)
+        doc_ref = inventario_ref_2(negocio_id, sucursal, inventario_id)
         
         if not doc_ref.get().exists:
             break  # ID disponible
@@ -620,7 +617,7 @@ def api_crear_inventario(payload: InventarioPayload,session=Depends(requiere_ses
         for producto in productos.values():
 
             base_ref = (
-                inventario_ref_2(DB, negocio_id, sucursal, 'base')
+                inventario_ref_2(negocio_id, sucursal, 'base')
                 .collection(subcoleccion)
                 .document(producto.producto)
             )
@@ -652,7 +649,6 @@ def api_crear_inventario(payload: InventarioPayload,session=Depends(requiere_ses
             })
 
             agregar_existencia_producto_2(
-                DB,
                 negocio_id,
                 sucursal,
                 subcoleccion,
@@ -660,7 +656,7 @@ def api_crear_inventario(payload: InventarioPayload,session=Depends(requiere_ses
                 producto.existencia
             )
                 
-    inventario=obtener_inventario_completo_2(DB,negocio_id,sucursal,inventario_id)
+    inventario=obtener_inventario_completo_2(negocio_id,sucursal,inventario_id)
     print(inventario)
     print(comparaciones)
     info=inventario_a_texto(fecha_real,sucursal,elaborado_por,notas,inventario)
@@ -686,7 +682,7 @@ def ver_ultimo_inventario(
 
     negocio_id = session["negocio_id"]
 
-    inventario_id = obtener_inventario_mas_reciente_2(DB, negocio_id, sucursal)
+    inventario_id = obtener_inventario_mas_reciente_2(negocio_id, sucursal)
 
     if not inventario_id:
             return templates.TemplateResponse(
@@ -700,7 +696,6 @@ def ver_ultimo_inventario(
     )
 
     inventario = obtener_inventario_completo_2(
-        DB,
         negocio_id,
         sucursal,
         inventario_id
@@ -727,7 +722,7 @@ def ver_penultimo_inventario(
 
     negocio_id = session["negocio_id"]
 
-    inventario_id = obtener_penultimo_inventario(DB, negocio_id, sucursal)
+    inventario_id = obtener_penultimo_inventario(negocio_id, sucursal)
 
     if not inventario_id:
         return templates.TemplateResponse(
@@ -741,7 +736,6 @@ def ver_penultimo_inventario(
             )
 
     inventario = obtener_inventario_completo_2(
-        DB,
         negocio_id,
         sucursal,
         inventario_id
@@ -768,8 +762,7 @@ def apiEntradaProducto(payload: EntradaInventarioPayload,sucursal:str,session=De
         
         for producto in productos.values():
 
-            entrada_de_producto(DB,
-                                negocio_id,
+            entrada_de_producto(negocio_id,
                                 sucursal,
                                 subcoleccion,
                                 producto.producto,
@@ -787,7 +780,7 @@ def EntradaSucursal(
         return session
     
     negocio_id = session["negocio_id"]
-    inventario = obtener_inventario_completo_2(DB, negocio_id,sucursal, inventario_id)
+    inventario = obtener_inventario_completo_2(negocio_id,sucursal, inventario_id)
     if not inventario:
         raise HTTPException(status_code=404, detail="Sucursal no encontrada")
     return templates.TemplateResponse(
@@ -815,13 +808,13 @@ def ExistenciaSucursal(
         return session
     
     negocio_id = session["negocio_id"]
-    doc = negocio_ref(DB, negocio_id).get()
+    doc = negocio_ref(negocio_id).get()
 
     if not doc.exists:
         raise HTTPException(404, "Negocio no encontrado")
     negocio = doc.to_dict()
     activo = negocio.get("activo", True)
-    inventario = obtener_inventario_completo_2(DB, negocio_id,sucursal, inventario_id)
+    inventario = obtener_inventario_completo_2(negocio_id,sucursal, inventario_id)
     if not inventario:
         raise HTTPException(status_code=404, detail="Sucursal no encontrada")
     return templates.TemplateResponse(
@@ -851,7 +844,7 @@ def ver_historial_inventarios(
 
     negocio_id = session["negocio_id"]
 
-    inventarios = obtener_lista_inventarios_2(DB, negocio_id, sucursal)
+    inventarios = obtener_lista_inventarios_2(negocio_id, sucursal)
 
     meses = [
         "Enero","Febrero","Marzo","Abril","Mayo","Junio",
@@ -896,7 +889,7 @@ def apiVerInventarioDia(dia:str,sucursal:str,request: Request,session=Depends(re
     dia=dia.strip().lower()
 
     negocio_id = session["negocio_id"]
-    inventario = obtener_inventario_completo_2(DB,negocio_id,sucursal,dia)
+    inventario = obtener_inventario_completo_2(negocio_id,sucursal,dia)
     if not inventario:
         raise HTTPException(
         status_code=404,
@@ -918,7 +911,7 @@ def eliminar_producto(
 ):
     negocio_id = session["negocio_id"]
     try:
-        eliminar_producto_base(DB,negocio_id,subcoleccion, producto_id)
+        eliminar_producto_base(negocio_id,subcoleccion, producto_id)
         return {
             "status": "ok",
             "mensaje": f"Producto '{producto_id}' eliminado de '{subcoleccion}'"
@@ -954,9 +947,10 @@ def apiCrearUsuario(usuario:UsuarioModel,session=Depends(requiere_admin_api)):
     nombre=usuario.nombre.strip()
     password=usuario.password
     rol=usuario.rol
+    db = get_firestore()
     try:
         ref = (
-            DB.collection("negocios")
+            db.collection("negocios")
               .document(negocio_id)
               .collection('usuarios')
               .document(user.lower())
@@ -968,11 +962,11 @@ def apiCrearUsuario(usuario:UsuarioModel,session=Depends(requiere_admin_api)):
                 detail="El usuario ya existe"
             )
 
-        crear_usuario(DB,negocio_id,user,nombre,password,rol)
+        crear_usuario(negocio_id,user,nombre,password,rol)
 #Eliminar el usuario creado al momento de crear un usuario
-        init=negocio_ref(DB,negocio_id).collection('usuarios').document('init')
+        init=negocio_ref(negocio_id).collection('usuarios').document('init')
         if init is not None:
-            negocio_ref(DB,negocio_id).collection('usuarios').document('init').delete()
+            negocio_ref(negocio_id).collection('usuarios').document('init').delete()
         return {
             "mensaje": "Producto creado correctamente",
             'usuario':usuario,
@@ -992,7 +986,7 @@ def apiListarUsuarios(session=Depends(requiere_admin_api)):
     
     negocio_id = session["negocio_id"]
     try:
-        return obtener_empleados(DB,negocio_id)
+        return obtener_empleados(negocio_id)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
@@ -1004,9 +998,10 @@ def apiResetearPassword(
     session=Depends(requiere_admin_api)
 ):
     negocio_id = session["negocio_id"]
+    db = get_firestore()
     try:
         ref = (
-            DB.collection("negocios")
+            db.collection("negocios")
               .document(negocio_id)
               .collection("usuarios")
               .document(usuario)
@@ -1039,7 +1034,7 @@ def apiBorrarUsuario(
     usuario_actual = session['usuario']
 
     try:
-        eliminar_usuario(DB, negocio_id, usuario, usuario_actual)
+        eliminar_usuario(negocio_id, usuario, usuario_actual)
 
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -1059,7 +1054,7 @@ def listar_sucursales(session=Depends(requiere_sesion_html)):
     negocio_id = session["negocio_id"]
     try:
         suc_ref= (
-            negocio_ref(DB,negocio_id)
+            negocio_ref(negocio_id)
               .collection('sucursales').stream()
         )
 
@@ -1079,9 +1074,10 @@ def apiAgregarCorreo(correo:str=Body(...),
                      session=Depends(requiere_admin_api)
 ):
     negocio_id=session['negocio_id']
-    try:
+    db = get_firestore()
+    try:     
         ref=(
-            DB.collection('negocios')
+            db.collection('negocios')
             .document(negocio_id)
         )
         if not ref.get().exists:
@@ -1112,8 +1108,8 @@ def apiAgregarCorreo(correo:str=Body(...),
 @app.get("/administrativo/configuracion-correo")
 def obtenerConfiguracionCorreo(session=Depends(requiere_admin_api)):
     negocio_id = session['negocio_id']
-
-    ref = DB.collection('negocios').document(negocio_id)
+    db = get_firestore()
+    ref = db.collection('negocios').document(negocio_id)
     doc = ref.get()
 
     if not doc.exists:
@@ -1129,7 +1125,8 @@ def obtenerConfiguracionCorreo(session=Depends(requiere_admin_api)):
 @app.post('/function/enviar-correo')
 def apiEnviarCorreo(mensaje:str,ruta_pdf:str,session=Depends(requiere_sesion)):
     negocio_id=session['negocio_id']
-    ref=(DB.collection('negocios')
+    db = get_firestore()
+    ref=(db.collection('negocios')
         .document(negocio_id))
     doc=ref.get()
     if not doc.exists:
@@ -1159,7 +1156,7 @@ def apiCrearSucursal(sucursal:str=Body(...),encargado:str=Body(...),session=Depe
     negocio_id = session["negocio_id"]
     try:
         ref = (
-            negocio_ref(DB,negocio_id)
+            negocio_ref(negocio_id)
               .collection('sucursales')
               .document(sucursal)
         )
@@ -1170,12 +1167,12 @@ def apiCrearSucursal(sucursal:str=Body(...),encargado:str=Body(...),session=Depe
                 detail="La sucursal ya existe"
             )
 
-        crear_sucursal(DB,negocio_id,sucursal,encargado)
+        crear_sucursal(negocio_id,sucursal,encargado)
         #Inventario base
-        inventario=obtener_inventario_completo(DB,negocio_id,'base')
+        inventario=obtener_inventario_completo(negocio_id,'base')
 
         #Copiar el inventario base a la nueva sucursal
-        copiar_inventario_base_a_sucursal(DB,negocio_id,sucursal,inventario)
+        copiar_inventario_base_a_sucursal(negocio_id,sucursal,inventario)
         return {
                 "mensaje": "Sucursal creada correctamente",
                 "sucursal": sucursal,
@@ -1191,7 +1188,7 @@ def apiCrearSucursal(sucursal:str=Body(...),encargado:str=Body(...),session=Depe
 def view_crear_negocio(request: Request, session=Depends(requiere_maestro_html)):
     if isinstance(session, RedirectResponse):
         return session
-    negocios=lista_negocios(DB)
+    negocios=lista_negocios()
     return templates.TemplateResponse(
         'maestro_template.html',
         {'request':request,
@@ -1202,15 +1199,15 @@ def view_crear_negocio(request: Request, session=Depends(requiere_maestro_html))
 #Crear negocio
 @app.post('/madmin/crear-negocio')
 def apiCrearNegocio(nombre:str=Body(...),negocio_id:str=Body(...),session=Depends(requiere_maestro)):
-
+    db = get_firestore()
     try:
-        negocio_ref=DB.collection('negocios').document(negocio_id)
+        negocio_ref=db.collection('negocios').document(negocio_id)
         if negocio_ref.get().exists:
             raise HTTPException(
                 status_code=409,
                 detail="Ya existe un negocio con ese id")
         
-        crear_negocio(DB,negocio_id,nombre)
+        crear_negocio(negocio_id,nombre)
     except Exception as e:
         raise HTTPException(status_code=500, detail="Error interno del servidor")
 
@@ -1224,7 +1221,7 @@ def actualizarEstado(
 
     data={'activo':activo}
     try:
-        doc_ref=negocio_ref(DB,negocio_id)
+        doc_ref=negocio_ref(negocio_id)
     
         if not doc_ref.get().exists:
             raise HTTPException(status_code=404, detail="Producto no existe")
@@ -1243,7 +1240,7 @@ def eliminarNegocio(negocio_id:str=Body(...,embed=True),
     try:
         if negocio_id == "Adminsupreme":
             raise HTTPException(403, "No se puede eliminar este negocio")
-        eliminar_negocio(DB,negocio_id)
+        eliminar_negocio(negocio_id)
         return {"ok": True}
     except HTTPException:
         raise

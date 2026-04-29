@@ -11,25 +11,30 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email import encoders
-
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from textwrap import wrap
 
 load_dotenv()
 
-cred_path = os.getenv("FIREBASE_CREDENTIALS")
+def get_firestore():
+    if not firebase_admin._apps:
+        cred_path = os.getenv("FIREBASE_CREDENTIALS")
+        
+        if not cred_path:
+            raise Exception("FIREBASE_CREDENTIALS no está configurado")
 
-cred = credentials.Certificate(cred_path)
-if not firebase_admin._apps:
-    firebase_admin.initialize_app(cred)
-print('Conectado a firestore')
-DB = firestore.client()
-print('Base de datos conectada')
+        cred = credentials.Certificate(cred_path)
+        firebase_admin.initialize_app(cred)
+        print("Firebase inicializado correctamente")
+
+    return firestore.client()
+
 NEGOCIO_ID='Prueba1'
 
 #Crear negocio
-def crear_negocio(db,negocio_id,nombre):
+def crear_negocio(negocio_id,nombre):
+    db = get_firestore()
     try:
         negocio_ref=db.collection('negocios').document(negocio_id)
         negocio_ref.set({
@@ -57,7 +62,7 @@ def crear_negocio(db,negocio_id,nombre):
         
 
 #Crear nuevas subcolecciones en el inventario base
-def crear_subcoleccion(db,subcoleccion,negocio_id):
+def crear_subcoleccion(subcoleccion,negocio_id):
     '''
     Docstring for crear_subcoleccion
     
@@ -65,7 +70,7 @@ def crear_subcoleccion(db,subcoleccion,negocio_id):
     :param subcoleccion: nombre de la subcoleccion
     '''
     try:
-        inventario_ref(db,negocio_id,'base') \
+        inventario_ref(negocio_id,'base') \
         .collection(subcoleccion) \
         .document("init") \
         .set({
@@ -75,7 +80,7 @@ def crear_subcoleccion(db,subcoleccion,negocio_id):
          print('Error: ',e)
 
 #Prueba 2
-def crear_subcoleccion_2(db,subcoleccion,negocio_id,sucursal):
+def crear_subcoleccion_2(subcoleccion,negocio_id,sucursal):
     '''
     Docstring for crear_subcoleccion
     
@@ -83,7 +88,7 @@ def crear_subcoleccion_2(db,subcoleccion,negocio_id,sucursal):
     :param subcoleccion: nombre de la subcoleccion
     '''
     try:
-        inventario_ref_2(db,negocio_id,sucursal,'base') \
+        inventario_ref_2(negocio_id,sucursal,'base') \
         .collection(subcoleccion) \
         .document("init") \
         .set({
@@ -94,7 +99,7 @@ def crear_subcoleccion_2(db,subcoleccion,negocio_id,sucursal):
 
 
 #Funcion final a utilizar
-def crear_subcoleccion_3(db,subcoleccion,negocio_id,):
+def crear_subcoleccion_3(subcoleccion,negocio_id,):
     '''
     Docstring for crear_subcoleccion
     
@@ -103,7 +108,7 @@ def crear_subcoleccion_3(db,subcoleccion,negocio_id,):
     '''
     try:
         sucursales_ref = (
-            negocio_ref(db, negocio_id)
+            negocio_ref(negocio_id)
             .collection('sucursales')
         )
 
@@ -114,7 +119,6 @@ def crear_subcoleccion_3(db,subcoleccion,negocio_id,):
             sucursal_id = sucursal_doc.id
 
             inventario_ref_2(
-                db,
                 negocio_id,
                 sucursal_id,
                 'base'
@@ -123,12 +127,12 @@ def crear_subcoleccion_3(db,subcoleccion,negocio_id,):
              .set({
                  "producto": True
              })
-        crear_subcoleccion(db,subcoleccion,negocio_id)
+        crear_subcoleccion(subcoleccion,negocio_id)
     except Exception as e:
         print('Error:', e)
 
 #Crear producto en el inventario base del producto
-def crear_producto(db,subcoleccion,producto,unidad,negocio_id,minimo,maximo):
+def crear_producto(subcoleccion,producto,unidad,negocio_id,minimo,maximo):
     '''
     Docstring for crear_producto
     
@@ -145,7 +149,7 @@ def crear_producto(db,subcoleccion,producto,unidad,negocio_id,minimo,maximo):
     if maximo<=minimo:
         maximo=minimo+1
         
-    inventario_ref(db,negocio_id,'base')\
+    inventario_ref(negocio_id,'base')\
       .collection(subcoleccion) \
       .document(producto) \
       .set({
@@ -156,7 +160,7 @@ def crear_producto(db,subcoleccion,producto,unidad,negocio_id,minimo,maximo):
           'minimo':minimo,
           'maximo':maximo
       })
-def crear_producto_2(db,subcoleccion,producto,unidad,negocio_id,sucursal,minimo,maximo):
+def crear_producto_2(subcoleccion,producto,unidad,negocio_id,sucursal,minimo,maximo):
     '''
     Docstring for crear_producto
     
@@ -166,7 +170,7 @@ def crear_producto_2(db,subcoleccion,producto,unidad,negocio_id,sucursal,minimo,
     '''
     minimo=float(minimo)
     maximo=float(maximo)
-    inventario_ref_2(db,negocio_id,sucursal,'base')\
+    inventario_ref_2(negocio_id,sucursal,'base')\
       .collection(subcoleccion) \
       .document(producto) \
       .set({
@@ -179,7 +183,7 @@ def crear_producto_2(db,subcoleccion,producto,unidad,negocio_id,sucursal,minimo,
       })
 
 #Crea el producto en el inventario de todas las sucursales
-def crear_producto_3(db,subcoleccion,producto,unidad,minimo,maximo,negocio_id):
+def crear_producto_3(subcoleccion,producto,unidad,minimo,maximo,negocio_id):
     '''
     Docstring for crear_producto
     
@@ -190,12 +194,11 @@ def crear_producto_3(db,subcoleccion,producto,unidad,minimo,maximo,negocio_id):
     # Obtener todas las sucursales
     minimo=float(minimo)
     maximo=float(maximo)
-    sucursales_ref = negocio_ref(db, negocio_id).collection('sucursales')
+    sucursales_ref = negocio_ref(negocio_id).collection('sucursales')
     sucursales = sucursales_ref.stream()
     for sucursal_doc in sucursales:
         sucursal_id=sucursal_doc.id
         inventario_base_ref=inventarios_collection_ref_2(
-            db,
             negocio_id,
             sucursal_id
         ).document('base')
@@ -208,10 +211,10 @@ def crear_producto_3(db,subcoleccion,producto,unidad,minimo,maximo,negocio_id):
           'minimo':minimo,
           'maximo':maximo
         })
-    crear_producto(db,subcoleccion,producto,unidad,negocio_id,minimo,maximo)
-def agregar_producto_inventario(db,negocio_id,dia,subcoleccion,producto,existencia,unidad,urge=False):
+    crear_producto(subcoleccion,producto,unidad,negocio_id,minimo,maximo)
+def agregar_producto_inventario(negocio_id,dia,subcoleccion,producto,existencia,unidad,urge=False):
     existencia=float(existencia)
-    inventario_ref(db, negocio_id, inventario_id=dia)\
+    inventario_ref(negocio_id, inventario_id=dia)\
         .collection(subcoleccion)\
         .document(producto)\
         .set({
@@ -221,9 +224,9 @@ def agregar_producto_inventario(db,negocio_id,dia,subcoleccion,producto,existenc
             'urge':urge
         })
 
-def agregar_producto_inventario_2(db,negocio_id,sucursal,dia,subcoleccion,producto,existencia,unidad,urge=False):
+def agregar_producto_inventario_2(negocio_id,sucursal,dia,subcoleccion,producto,existencia,unidad,urge=False):
     existencia=float(existencia)
-    inventario_ref_2(db, negocio_id,sucursal, inventario_id=dia)\
+    inventario_ref_2(negocio_id,sucursal, inventario_id=dia)\
         .collection(subcoleccion)\
         .document(producto)\
         .set({
@@ -233,7 +236,7 @@ def agregar_producto_inventario_2(db,negocio_id,sucursal,dia,subcoleccion,produc
             'urge':urge
         })
 
-def agregar_existencia_producto_2(db,negocio_id,sucursal,subcoleccion,producto,existencia):
+def agregar_existencia_producto_2(negocio_id,sucursal,subcoleccion,producto,existencia):
     '''
     Se agrega la existencia actual del producto
     :param db: Database
@@ -243,12 +246,12 @@ def agregar_existencia_producto_2(db,negocio_id,sucursal,subcoleccion,producto,e
     :param producto: Producto
     :param existencia: Existencia actual del producto
     '''
-    inventario_ref_2(db,negocio_id,sucursal,'base')\
+    inventario_ref_2(negocio_id,sucursal,'base')\
         .collection(subcoleccion)\
         .document(producto)\
         .update({'existencia':existencia})
 
-def entrada_de_producto(db,negocio_id,sucursal,subcoleccion,producto,entrada:float):
+def entrada_de_producto(negocio_id,sucursal,subcoleccion,producto,entrada:float):
     '''
     Al entrar un producto se suma con la existencia actual
     
@@ -261,7 +264,7 @@ def entrada_de_producto(db,negocio_id,sucursal,subcoleccion,producto,entrada:flo
     
     Actualiza la existencia de producto en el inventario base de la sucursal
     '''
-    producto_ref=inventario_ref_2(db,negocio_id,sucursal,'base')\
+    producto_ref=inventario_ref_2(negocio_id,sucursal,'base')\
         .collection(subcoleccion)\
         .document(producto)
     doc=producto_ref.get()
@@ -272,8 +275,8 @@ def entrada_de_producto(db,negocio_id,sucursal,subcoleccion,producto,entrada:flo
     total=existencia+entrada
     producto_ref.update({'existencia':total})
     
-def comparar_existencia_con_inventario(db,negocio_id,sucursal,subcoleccion,producto,dia):
-    base_ref=(inventario_ref_2(db,negocio_id,sucursal)
+def comparar_existencia_con_inventario(negocio_id,sucursal,subcoleccion,producto,dia):
+    base_ref=(inventario_ref_2(negocio_id,sucursal)
     .collection(subcoleccion)
     .document(producto)
     .get())
@@ -282,7 +285,7 @@ def comparar_existencia_con_inventario(db,negocio_id,sucursal,subcoleccion,produ
     base=base_ref.to_dict()
     existencia_base=base['existencia']
     
-    inventario_actual_ref=(inventario_ref_2(db,negocio_id,sucursal,dia)
+    inventario_actual_ref=(inventario_ref_2(negocio_id,sucursal,dia)
                            .collection(subcoleccion)
                            .document(producto)
                            .get())
@@ -293,9 +296,9 @@ def comparar_existencia_con_inventario(db,negocio_id,sucursal,subcoleccion,produ
     se_acabo=existencia_base-existencia_inventario
     return se_acabo
     
-def comparar_inventario_completo(db,negocio_id,sucursal,dia):
-    inventario_base=obtener_inventario_base_2(db,negocio_id,sucursal)
-    inventario_actual=obtener_inventario_completo_2(db,negocio_id,sucursal,dia)
+def comparar_inventario_completo(negocio_id,sucursal,dia):
+    inventario_base=obtener_inventario_base_2(negocio_id,sucursal)
+    inventario_actual=obtener_inventario_completo_2(negocio_id,sucursal,dia)
     
     resultado={}
     
@@ -324,7 +327,7 @@ def comparar_inventario_completo(db,negocio_id,sucursal,dia):
             })
 
     return resultado
-def crear_nuevo_inventario(db,fecha,elaborado_por,negocio_id,sucursal,notas=''):
+def crear_nuevo_inventario(fecha,elaborado_por,negocio_id,sucursal,notas=''):
     '''
     db:database
     fecha:fecha de elaboracion
@@ -334,7 +337,7 @@ def crear_nuevo_inventario(db,fecha,elaborado_por,negocio_id,sucursal,notas=''):
     '''
 
     nombre_documento = f"{fecha}-{sucursal}"
-    nuevo_ref = inventario_ref(db, negocio_id, inventario_id=nombre_documento)
+    nuevo_ref = inventario_ref(negocio_id, inventario_id=nombre_documento)
     
     nuevo_ref.set({
     "fecha": fecha,
@@ -345,7 +348,7 @@ def crear_nuevo_inventario(db,fecha,elaborado_por,negocio_id,sucursal,notas=''):
 }) 
     return nuevo_ref
 
-def crear_nuevo_inventario_2(db,fecha,elaborado_por,negocio_id,sucursal,notas=''):
+def crear_nuevo_inventario_2(fecha,elaborado_por,negocio_id,sucursal,notas=''):
     '''
     db:database
     fecha:fecha de elaboracion
@@ -355,7 +358,7 @@ def crear_nuevo_inventario_2(db,fecha,elaborado_por,negocio_id,sucursal,notas=''
     '''
 
     nombre_documento = f"{fecha}-{sucursal}"
-    nuevo_ref = inventario_ref_2(db, negocio_id,sucursal,inventario_id=nombre_documento)
+    nuevo_ref = inventario_ref_2(negocio_id,sucursal,inventario_id=nombre_documento)
     
     nuevo_ref.set({
     "fecha": fecha,
@@ -366,7 +369,7 @@ def crear_nuevo_inventario_2(db,fecha,elaborado_por,negocio_id,sucursal,notas=''
 }) 
     return nuevo_ref
 
-def editar_stocks(db,negocio_id,subcoleccion,producto,minimo,maximo,unidad):
+def editar_stocks(negocio_id,subcoleccion,producto,minimo,maximo,unidad):
     data={}
     
     if minimo is not None:
@@ -378,14 +381,14 @@ def editar_stocks(db,negocio_id,subcoleccion,producto,minimo,maximo,unidad):
 
     if not data:
         return
-    sucursales=lista_sucursales(db,negocio_id)
+    sucursales=lista_sucursales(negocio_id)
     for sucursal in sucursales:
-        inventario_ref_2(db,negocio_id,sucursal,'base')\
+        inventario_ref_2(negocio_id,sucursal,'base')\
         .collection(subcoleccion) \
         .document(producto) \
         .update(data)
 
-def editar_stocks_2(db,negocio_id,sucursal,subcoleccion,producto,minimo,maximo,unidad):
+def editar_stocks_2(negocio_id,sucursal,subcoleccion,producto,minimo,maximo,unidad):
     data={}
     if maximo<=minimo:
         maximo=minimo+1
@@ -400,7 +403,7 @@ def editar_stocks_2(db,negocio_id,sucursal,subcoleccion,producto,minimo,maximo,u
         return
     
     doc_ref = (
-        inventario_ref_2(db, negocio_id, sucursal, 'base')
+        inventario_ref_2(negocio_id, sucursal, 'base')
             .collection(subcoleccion)
             .document(producto)
     )
@@ -408,8 +411,8 @@ def editar_stocks_2(db,negocio_id,sucursal,subcoleccion,producto,minimo,maximo,u
     #Crea si no existe, actualiza si ya existe
     doc_ref.set(data, merge=True)
 
-def obtener_lista_inventarios(db, negocio_id):
-    inventarios_ref = inventario_ref(db, negocio_id).parent.stream()
+def obtener_lista_inventarios(negocio_id):
+    inventarios_ref = inventario_ref(negocio_id).parent.stream()
     lista = []
 
     for doc in inventarios_ref:
@@ -426,8 +429,8 @@ def obtener_lista_inventarios(db, negocio_id):
     lista.sort(reverse=False)
     return lista
 
-def obtener_lista_inventarios_2(db, negocio_id,sucursal):
-    inventarios_ref = inventario_ref_2(db, negocio_id,sucursal).parent.stream()
+def obtener_lista_inventarios_2(negocio_id,sucursal):
+    inventarios_ref = inventario_ref_2(negocio_id,sucursal).parent.stream()
     lista = []
 
     for doc in inventarios_ref:
@@ -445,7 +448,7 @@ def obtener_lista_inventarios_2(db, negocio_id,sucursal):
     return lista
 
 #Obtener productos de una subcoleccion
-def obtener_productos(db,subcoleccion,negocio_id,dia:str):
+def obtener_productos(subcoleccion,negocio_id,dia:str):
     '''
     Docstring for obtener_productos
     
@@ -453,7 +456,7 @@ def obtener_productos(db,subcoleccion,negocio_id,dia:str):
     :param subcoleccion: Subcoleccion de firebase
     '''
     subcoleccion_ref = (
-        inventario_ref(db,negocio_id,dia)  #Id del dia del inventario
+        inventario_ref(negocio_id,dia)  #Id del dia del inventario
           .collection(subcoleccion)
     )
 
@@ -479,7 +482,7 @@ def obtener_productos(db,subcoleccion,negocio_id,dia:str):
 
     return productos
 
-def obtener_productos_2(db,subcoleccion,negocio_id,sucursal,dia:str):
+def obtener_productos_2(subcoleccion,negocio_id,sucursal,dia:str):
     '''
     Docstring for obtener_productos
     
@@ -487,7 +490,7 @@ def obtener_productos_2(db,subcoleccion,negocio_id,sucursal,dia:str):
     :param subcoleccion: Subcoleccion de firebase
     '''
     subcoleccion_ref = (
-        inventario_ref_2(db,negocio_id,sucursal,dia)  #Id del dia del inventario
+        inventario_ref_2(negocio_id,sucursal,dia)  #Id del dia del inventario
           .collection(subcoleccion)
     )
 
@@ -513,31 +516,31 @@ def obtener_productos_2(db,subcoleccion,negocio_id,sucursal,dia:str):
 
     return productos
 
-def obtener_inventario_completo(db,negocio_id,dia):
-    base_ref = inventario_ref(db,negocio_id,dia)
+def obtener_inventario_completo(negocio_id,dia):
+    base_ref = inventario_ref(negocio_id,dia)
 
     inventario = {}
 
     for col in base_ref.collections():
-        productos = obtener_productos(db,col.id,negocio_id,dia)
+        productos = obtener_productos(col.id,negocio_id,dia)
         inventario[col.id] = productos
 
     return inventario
-def obtener_inventario_completo_2(db,negocio_id,sucursal,dia):
-    base_ref = inventario_ref_2(db,negocio_id,sucursal,dia)
+def obtener_inventario_completo_2(negocio_id,sucursal,dia):
+    base_ref = inventario_ref_2(negocio_id,sucursal,dia)
 
     inventario = {}
 
     for col in base_ref.collections():
-        productos = obtener_productos_2(db,col.id,negocio_id,sucursal,dia)
+        productos = obtener_productos_2(col.id,negocio_id,sucursal,dia)
         inventario[col.id] = productos
 
     return inventario
-def obtener_inventario_base(db,negocio_id):
+def obtener_inventario_base(negocio_id):
     inventario = {}
 
     subcols = (
-        inventario_ref(db,negocio_id,'base')
+        inventario_ref(negocio_id,'base')
           .collections()
     )
 
@@ -558,11 +561,11 @@ def obtener_inventario_base(db,negocio_id):
 
     return inventario
 
-def obtener_inventario_base_2(db,negocio_id,sucursal):
+def obtener_inventario_base_2(negocio_id,sucursal):
     inventario = {}
 
     subcols = (
-        inventario_ref_2(db,negocio_id,sucursal,'base')
+        inventario_ref_2(negocio_id,sucursal,'base')
           .collections()
     )
 
@@ -586,9 +589,9 @@ def obtener_inventario_base_2(db,negocio_id,sucursal):
 
 
 
-def obtener_inventario_mas_reciente(db,negocio_id):
+def obtener_inventario_mas_reciente(negocio_id):
     docs = (
-        inventarios_collection_ref(db,negocio_id)
+        inventarios_collection_ref(negocio_id)
         .order_by("created_at", direction=firestore.Query.DESCENDING)
         .limit(1)
         .stream()
@@ -598,9 +601,9 @@ def obtener_inventario_mas_reciente(db,negocio_id):
         return doc.id  # nombre del documento (ej: "2026-01-06-cerritos")
 
     return None
-def obtener_inventario_mas_reciente_2(db,negocio_id,sucursal):
+def obtener_inventario_mas_reciente_2(negocio_id,sucursal):
     docs = (
-        inventarios_collection_ref_2(db,negocio_id,sucursal)
+        inventarios_collection_ref_2(negocio_id,sucursal)
         .order_by("created_at", direction=firestore.Query.DESCENDING)
         .limit(1)
         .stream()
@@ -611,10 +614,10 @@ def obtener_inventario_mas_reciente_2(db,negocio_id,sucursal):
 
     return None
 
-def obtener_penultimo_inventario(db, negocio_id, sucursal):
+def obtener_penultimo_inventario(negocio_id, sucursal):
 
     docs = (
-        inventarios_collection_ref_2(db, negocio_id, sucursal)
+        inventarios_collection_ref_2(negocio_id, sucursal)
         .order_by("created_at", direction=firestore.Query.DESCENDING)
         .limit(2)
         .stream()
@@ -628,11 +631,11 @@ def obtener_penultimo_inventario(db, negocio_id, sucursal):
     return docs[1].id
 
 #Eliminar
-def eliminar_producto_base(db,negocio_id:str, subcoleccion: str, producto_id: str):
+def eliminar_producto_base(negocio_id:str, subcoleccion: str, producto_id: str):
     """
     Elimina un producto específico de la colección 'base'
     """
-    ref = inventario_ref(db,negocio_id,'base')\
+    ref = inventario_ref(negocio_id,'base')\
             .collection(subcoleccion) \
             .document(producto_id)
     
@@ -641,12 +644,11 @@ def eliminar_producto_base(db,negocio_id:str, subcoleccion: str, producto_id: st
 
     ref.delete()
     
-    sucursales_ref = negocio_ref(db, negocio_id).collection('sucursales')
+    sucursales_ref = negocio_ref(negocio_id).collection('sucursales')
     sucursales = sucursales_ref.stream()
     for sucursal_doc in sucursales:
         sucursal_id=sucursal_doc.id
         inventario_base_ref=inventarios_collection_ref_2(
-            db,
             negocio_id,
             sucursal_id
         ).document('base')
@@ -654,14 +656,14 @@ def eliminar_producto_base(db,negocio_id:str, subcoleccion: str, producto_id: st
         inventario_base_ref.collection(subcoleccion).document(producto_id).delete()
 
 #Eliminar subcolecciones
-def eliminar_subcoleccion(db, negocio_id:str,subcoleccion: str):
+def eliminar_subcoleccion(negocio_id:str,subcoleccion: str):
     """
     Elimina una subcolección solo si contiene únicamente el documento 'init'
     db:database
     subcoleccion: subcoleccion a eliminar
     """
     ref = (
-        inventario_ref(db,negocio_id,'base')
+        inventario_ref(negocio_id,'base')
           .collection(subcoleccion)
     )
 
@@ -674,25 +676,24 @@ def eliminar_subcoleccion(db, negocio_id:str,subcoleccion: str):
     # Borrar el documento init
     ref.document("init").delete()
     
-    sucursales_ref = negocio_ref(db, negocio_id).collection('sucursales')
+    sucursales_ref = negocio_ref(negocio_id).collection('sucursales')
     sucursales = sucursales_ref.stream()
     for sucursal_doc in sucursales:
         sucursal_id=sucursal_doc.id
         inventario_base_ref=inventarios_collection_ref_2(
-            db,
             negocio_id,
             sucursal_id
         ).document('base').collection(subcoleccion)
 
         inventario_base_ref.document('init').delete()
 
-def crear_usuario(db,negocio_id,usuario,nombre,password,rol):
+def crear_usuario(negocio_id,usuario,nombre,password,rol):
     '''
     Docstring for crear usuario
     '''
     password_hash = hash_password(password)
     ref = (
-        negocio_ref(db, negocio_id)
+        negocio_ref(negocio_id)
         .collection("usuarios")
         .document(usuario)
     )
@@ -709,9 +710,9 @@ def crear_usuario(db,negocio_id,usuario,nombre,password,rol):
         "created_at": firestore.SERVER_TIMESTAMP
     })
     
-def copiar_inventario_base_a_sucursal(db, negocio_id, sucursal, inventario_base):
+def copiar_inventario_base_a_sucursal(negocio_id, sucursal, inventario_base):
 
-    base_ref = inventario_ref_2(db, negocio_id, sucursal)
+    base_ref = inventario_ref_2(negocio_id, sucursal)
 
     for categoria, productos in inventario_base.items():
 
@@ -727,9 +728,9 @@ def copiar_inventario_base_a_sucursal(db, negocio_id, sucursal, inventario_base)
                 "minimo": 0,
                 "maximo": 10
             })
-def obtener_empleados(db, negocio_id):
+def obtener_empleados(negocio_id):
     ref = (
-        negocio_ref(db, negocio_id)
+        negocio_ref(negocio_id)
         .collection("usuarios")
         .where(filter=FieldFilter("activo", "==", True))
         .stream()
@@ -748,37 +749,41 @@ def obtener_empleados(db, negocio_id):
 
 #Expansion del proyecto
 #Regresa el id del negocio
-def negocio_ref(db, negocio_id):
+def negocio_ref(negocio_id):
+    db = get_firestore()
     return db.collection("negocios").document(negocio_id)
 #Regresa el inventario que se necesita
-def inventario_ref(db, negocio_id, inventario_id="base"):
+def inventario_ref(negocio_id, inventario_id="base"):
     return (
-        negocio_ref(db, negocio_id)
+        negocio_ref(negocio_id)
         .collection("inventarios")
         .document(inventario_id)
     )
-def inventario_ref_2(db,negocio_id,sucursal,inventario_id='base'):
+def inventario_ref_2(negocio_id,sucursal,inventario_id='base'):
     return(
-        negocio_ref(db,negocio_id)
+        negocio_ref(negocio_id)
         .collection('sucursales')
         .document(sucursal)
         .collection('inventarios')
         .document(inventario_id)
     )
 
-def inventarios_collection_ref(db, negocio_id):
+def inventarios_collection_ref(negocio_id):
+    db = get_firestore()
     return (
         negocio_ref(db, negocio_id)
         .collection("inventarios")
     )
-def inventarios_collection_ref_2(db,negocio_id,sucursal):
+def inventarios_collection_ref_2(negocio_id,sucursal):
+    db = get_firestore()
     return(
         negocio_ref(db,negocio_id)
         .collection('sucursales')
         .document(sucursal)
         .collection('inventarios')
     )
-def autenticar_usuario(db, negocio_id, usuario, password):
+def autenticar_usuario(negocio_id, usuario, password):
+    db = get_firestore()
     ref = (
         db.collection("negocios")
           .document(negocio_id)
@@ -802,7 +807,7 @@ def autenticar_usuario(db, negocio_id, usuario, password):
         'activo':data['activo']
     }
     
-def crear_sucursal(db,negocio_id,sucursal,encargado):
+def crear_sucursal(negocio_id,sucursal,encargado):
     '''
     Docstring for crear_producto
     
@@ -810,8 +815,8 @@ def crear_sucursal(db,negocio_id,sucursal,encargado):
     :param subcoleccion: Description
     :param producto: Description
     '''
-    sucursales=lista_sucursales(db,negocio_id)
-    negocio_ref(db,negocio_id)\
+    sucursales=lista_sucursales(negocio_id)
+    negocio_ref(negocio_id)\
       .collection('sucursales') \
       .document(sucursal) \
       .set({
@@ -820,12 +825,12 @@ def crear_sucursal(db,negocio_id,sucursal,encargado):
       })
     for sucursal in sucursales:
         if sucursal=='init':
-            negocio_ref(db,negocio_id)\
+            negocio_ref(negocio_id)\
             .collection('sucursales') \
             .document(sucursal) \
             .delete()
             break
-def lista_sucursales(db,negocio_id):
+def lista_sucursales(negocio_id):
     '''
     Docstring for lista_sucursales
     
@@ -833,17 +838,18 @@ def lista_sucursales(db,negocio_id):
     :param negocio_id: Description
     '''
     ref = (
-        negocio_ref(db, negocio_id)
+        negocio_ref(negocio_id)
         .collection("sucursales")
         .stream()
     )
     return [doc.id for doc in ref]
-def lista_negocios(db):
+def lista_negocios():
     '''
     Docstring for lista_negocios
     
     :param db: base de datos
     '''
+    db = get_firestore()
     ref = db.collection('negocios').stream()
 
     negocios = []
@@ -1008,10 +1014,10 @@ def enviar_correo(email,contra,recipent,info,ruta_pdf):
 
 #Eliminar usuario
 #Eliminar
-def eliminar_usuario(db, negocio_id: str, usuario: str, usuario_actual: str):
+def eliminar_usuario(negocio_id: str, usuario: str, usuario_actual: str):
 
     usuarios_ref = (
-        negocio_ref(db, negocio_id)
+        negocio_ref(negocio_id)
         .collection('usuarios')
     )
 
@@ -1042,8 +1048,8 @@ def eliminar_usuario(db, negocio_id: str, usuario: str, usuario_actual: str):
         raise ValueError("Debe existir al menos un administrador")
 
     usuario_ref.delete()
-def eliminar_negocio(db,negocio_id):
-    ref=negocio_ref(db,negocio_id)
+def eliminar_negocio(negocio_id):
+    ref=negocio_ref(negocio_id)
     if not ref.get().exists:
         raise ValueError('El negocio no existe')
     ref.delete() 
