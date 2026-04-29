@@ -1252,3 +1252,7 @@ def eliminarNegocio(negocio_id:str=Body(...,embed=True),
 async def debug_payload(request: Request):
     body = await request.json()
     return body
+
+@app.get("/healthz")
+def health():
+    return {"status": "ok"}
