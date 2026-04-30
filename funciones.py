@@ -1020,6 +1020,7 @@ def enviar_correo_backend(negocio_id, mensaje, ruta_pdf):
 #Primero tenemos que crear una contrasena de aplicaciones en el gmail
 def enviar_correo(email,contra,recipent,info,ruta_pdf):
     try:
+        print('intentando enviar correo')
         mensaje=MIMEMultipart()  #De aqui a la linea 11 comienza la configuracion del correo
         mensaje['From']=email
         mensaje['To']=recipent
@@ -1043,13 +1044,17 @@ def enviar_correo(email,contra,recipent,info,ruta_pdf):
 
         parte.add_header(
             "Content-Disposition",
-            f'attachment; filename="{os.path.basename(ruta_pdf)}"'
+            "attachment",
+            filename= ruta_pdf,
         )
         mensaje.attach(parte)
-        
-        with smtplib.SMTP_SSL("smtp.gmail.com", 587) as smtp:
-                    smtp.login(email, contra)
-                    smtp.send_message(mensaje)
+    
+        smtp_server=smtplib.SMTP('smtp.gmail.com',587)  #Servidor de gmail
+        smtp_server.starttls()
+        smtp_server.login(email,contra)  #iniciar sesion
+        smtp_server.sendmail(email,recipent,mensaje.as_string())
+        smtp_server.quit()
+        print('Listo')
     except Exception as e:
         print(e)
         raise e
