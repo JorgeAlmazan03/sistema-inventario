@@ -208,8 +208,22 @@ window.onload = cargarUrgentes;
 
 {% if dia %}
 {% set partes = dia.split('-') %}
+{% set meses = {
+    '01': 'enero',
+    '02': 'febrero',
+    '03': 'marzo',
+    '04': 'abril',
+    '05': 'mayo',
+    '06': 'junio',
+    '07': 'julio',
+    '08': 'agosto',
+    '09': 'septiembre',
+    '10': 'octubre',
+    '11': 'noviembre',
+    '12': 'diciembre'
+} %}
 <h1>
-Inventario {{ partes[0] }} de {{ partes[2] }} - {{ partes[3]|capitalize }}
+Inventario {{ partes[0] }} de {{ meses[partes[1]] }} de {{partes[2]}} - {{ partes[3]|capitalize }}
 </h1>
 {% else %}
 <h1>Inventario</h1>

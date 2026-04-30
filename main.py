@@ -1,3 +1,4 @@
+import os
 from datetime import datetime, timedelta, timezone
 from functools import wraps
 from firebase_admin import credentials,firestore
@@ -5,9 +6,10 @@ from fastapi import FastAPI, Request,Body,HTTPException,Depends
 from fastapi.responses import HTMLResponse,RedirectResponse
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
+from fastapi import BackgroundTasks
 from funciones import obtener_inventario_completo,eliminar_producto_base,crear_usuario,obtener_inventario_mas_reciente_2,obtener_penultimo_inventario
 from funciones import eliminar_subcoleccion,copiar_inventario_base_a_sucursal,lista_negocios,eliminar_negocio,get_firestore
-from funciones import obtener_empleados,inventario_ref,negocio_ref,autenticar_usuario,crear_sucursal,crear_negocio,enviar_correo
+from funciones import obtener_empleados,inventario_ref,negocio_ref,autenticar_usuario,crear_sucursal,crear_negocio,enviar_correo_backend
 from funciones import inventario_a_texto,crear_pdf_inventario,crear_producto_3,crear_subcoleccion_3,editar_stocks_2,lista_sucursales,inventario_ref_2
 from funciones import obtener_inventario_completo_2,agregar_existencia_producto_2,entrada_de_producto,eliminar_usuario,obtener_lista_inventarios_2
 from pydantic import BaseModel
@@ -16,7 +18,7 @@ from security import hash_password
 app = FastAPI(title="Inventario")
 app.add_middleware(
     SessionMiddleware,
-    secret_key="Esta_clave_debe_Ser_seguraaa",
+    secret_key=os.getenv("SECRET_KEY"),
     session_cookie="session",
     max_age=60 * 60 * 24  # 1 día
 )
@@ -60,7 +62,11 @@ class StockUpdate(BaseModel):
     maximo: Optional[int] = None
     unidad: Optional[str] = None
     
-
+def generar_y_enviar(info, ruta, negocio_id):
+    crear_pdf_inventario(info, ruta)
+    enviar_correo_backend(negocio_id,"Correo de Inventario Time",ruta)
+    if os.path.exists(ruta):
+        os.remove(ruta)
 #Login
 @app.get("/", response_class=HTMLResponse)
 def vista_login(request: Request):
@@ -573,7 +579,9 @@ def nuevo_inventario(
 
 @app.post("/inventario/crear-inventario")
 @requiere_negocio_activo
-def api_crear_inventario(payload: InventarioPayload,session=Depends(requiere_sesion)):
+def api_crear_inventario(payload: InventarioPayload,
+                         background_tasks: BackgroundTasks,
+                         session=Depends(requiere_sesion)):
 
     negocio_id = session["negocio_id"]
     sucursal=payload.sucursal.strip()
@@ -608,14 +616,12 @@ def api_crear_inventario(payload: InventarioPayload,session=Depends(requiere_ses
         "activo": True,
         "created_at": firestore.SERVER_TIMESTAMP
     })
-    comparaciones = {}
+    inventario_final={}
     # Subcolecciones y productos
     for subcoleccion, productos in inventario.items():
-        
-        if subcoleccion not in comparaciones:
-            comparaciones[subcoleccion] = []
 
-        
+        if subcoleccion not in inventario_final:
+            inventario_final[subcoleccion] = []
         for producto in productos.values():
 
             base_ref = (
@@ -634,12 +640,7 @@ def api_crear_inventario(payload: InventarioPayload,session=Depends(requiere_ses
                 existencia_base_anterior = base_data.get("existencia", 0)
                 minimo = base_data.get("minimo")
 
-            se_acabo = existencia_base_anterior - producto.existencia
-
-            comparaciones[subcoleccion].append({
-                "id": producto.producto,
-                "se_acabo": se_acabo
-            })
+            se_acabo = max(0, existencia_base_anterior - producto.existencia)
 
             urge = minimo is not None and producto.existencia <= minimo + 1
 
@@ -647,9 +648,16 @@ def api_crear_inventario(payload: InventarioPayload,session=Depends(requiere_ses
                 "producto": producto.producto,
                 "existencia": producto.existencia,
                 "unidad": producto.unidad,
-                "urge": urge
+                "urge": urge,
+                "se_acabo":se_acabo
             })
-
+            inventario_final[subcoleccion].append({
+            "producto": producto.producto,
+            "existencia": producto.existencia,
+            "unidad": producto.unidad,
+            "urge": urge,
+            "se_acabo": se_acabo
+            })
             agregar_existencia_producto_2(
                 negocio_id,
                 sucursal,
@@ -658,12 +666,10 @@ def api_crear_inventario(payload: InventarioPayload,session=Depends(requiere_ses
                 producto.existencia
             )
                 
-    #inventario=obtener_inventario_completo_2(negocio_id,sucursal,inventario_id)
-    #info=inventario_a_texto(fecha_real,sucursal,elaborado_por,notas,inventario)
+    info=inventario_a_texto(fecha_real,sucursal,elaborado_por,notas,inventario_final)
     
-    #ruta=f'{inventario_id}.pdf'
-    #crear_pdf_inventario(info,ruta)
-    #apiEnviarCorreo('Hola',ruta,session)
+    ruta=f'{inventario_id}.pdf'
+    background_tasks.add_task(generar_y_enviar, info, ruta, session['negocio_id'])
     return {
         "mensaje": "Inventario creado correctamente",
         "inventario_id": inventario_id
@@ -857,12 +863,14 @@ def ver_historial_inventarios(
 
         try:
             partes = inv.split("-")
-
             dia = int(partes[0])
             mes = int(partes[1])
             año = partes[2]
-
-            fecha_formateada = f"{dia} de {meses[mes-1]} del {año}"
+            extra=""
+            if len(partes) > 3 and "(" in partes[3]:
+                sucursal = partes[3]
+                extra = sucursal[sucursal.find("("):]  # desde '(' hasta el final
+            fecha_formateada = f"{dia} de {meses[mes-1]} del {año} {extra}"
 
         except:
             fecha_formateada = inv
@@ -871,7 +879,7 @@ def ver_historial_inventarios(
             "id": inv,
             "fecha": fecha_formateada
         })
-
+        
     return templates.TemplateResponse(
         "inventarios_lista.html",
         {
@@ -1123,29 +1131,15 @@ def obtenerConfiguracionCorreo(session=Depends(requiere_admin_api)):
         'password':datos.get('password','')
     } 
 @app.post('/function/enviar-correo')
-def apiEnviarCorreo(mensaje:str,ruta_pdf:str,session=Depends(requiere_sesion)):
-    negocio_id=session['negocio_id']
-    db = get_firestore()
-    ref=(db.collection('negocios')
-        .document(negocio_id))
-    doc=ref.get()
-    if not doc.exists:
-        raise HTTPException(status_code=404, detail="Negocio no encontrado")        
-    datos=doc.to_dict()
-    user=datos.get('correo')
-    password=datos.get('password')
-    destino=datos.get('destino')
-    if not user or not password or not destino:
-        raise HTTPException(
-            status_code=400,
-            detail="Faltan datos de configuración de correo"
-        )
+def apiEnviarCorreo(mensaje: str, ruta_pdf: str, session=Depends(requiere_sesion)):
+    negocio_id = session['negocio_id']
+
     try:
-        enviar_correo(user, password, destino, mensaje,ruta_pdf)
+        enviar_correo_backend(negocio_id, mensaje, ruta_pdf)
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=f"Error al enviar correo: {str(e)}"
+            detail=str(e)
         )
 
     return {"mensaje": "Correo enviado correctamente"}

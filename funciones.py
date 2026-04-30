@@ -13,6 +13,7 @@ from email.mime.base import MIMEBase
 from email import encoders
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
+from reportlab.lib import colors
 from textwrap import wrap
 
 load_dotenv()
@@ -764,15 +765,14 @@ def inventario_ref_2(negocio_id,sucursal,inventario_id='base'):
     )
 
 def inventarios_collection_ref(negocio_id):
-    db = get_firestore()
+
     return (
         negocio_ref(db, negocio_id)
         .collection("inventarios")
     )
 def inventarios_collection_ref_2(negocio_id,sucursal):
-    db = get_firestore()
     return(
-        negocio_ref(db,negocio_id)
+        negocio_ref(negocio_id)
         .collection('sucursales')
         .document(sucursal)
         .collection('inventarios')
@@ -862,43 +862,51 @@ def lista_negocios():
         })
 
     return negocios
-def inventario_a_texto(fecha,sucursal,elaborador,notas,inventario: dict) -> str:
+
+
+def inventario_a_texto(fecha, sucursal, elaborador, notas, inventario: dict) -> str:
 
     lineas = []
 
-    lineas.append(f'{fecha}  {sucursal}')
-    lineas.append(f'Elaborado por: {elaborador}')
-    lineas.append(f'Notas: {notas}')
+    # Encabezado
+    lineas.append(f"{fecha}     SUCURSAL: {sucursal.upper()}")
+    lineas.append(f"Elaborado por: {elaborador}")
+    lineas.append(f"Notas: {notas}")
+    lineas.append("=" * 55)
     lineas.append("")
 
     for categoria, productos in inventario.items():
 
-        lineas.append(f"CATEGORIA: {categoria.upper()}")
-        lineas.append("-" * 40)
+        lineas.append(f"{categoria.upper()}")
+        lineas.append("-" * 55)
+
+        # Encabezados de tabla
+        lineas.append(f"{'Producto':<20} {'Existencia':<15} {'Se acabó':<15}")
+        lineas.append("-" * 55)
 
         for p in productos:
 
-            linea = (
-                f"Producto: {p['producto']}\n"
-                f"Existencia: {p['existencia']} {p['unidad']}\n"
-            )
+            producto = p["producto"][:20]
+            existencia = f"{p['existencia']} {p['unidad']}"
+            se_acabo = f"{p.get('se_acabo', 0)} {p['unidad']}"
 
-            if p["urge"]:
-                linea += "⚠ URGE\n"
+            linea = f"{producto:<20} {existencia:<15} {se_acabo:<15}"
+
+            if p.get("urge"):
+                linea += "¡URGE!"
 
             lineas.append(linea)
 
         lineas.append("")
-    resultado="\n".join(lineas)
-    return resultado
 
+    return "\n".join(lineas)
 def crear_pdf_inventario(info: str, ruta_pdf: str):
 
     margen_x = 50
     margen_superior = 60
     margen_inferior = 60
 
-    max_chars = 85
+    max_chars = 95 
 
     c = canvas.Canvas(ruta_pdf, pagesize=letter)
 
@@ -910,25 +918,38 @@ def crear_pdf_inventario(info: str, ruta_pdf: str):
         nonlocal y
         c.showPage()
         y = height - margen_superior
-
-    def escribir_linea(texto, font, size, salto):
-
+    def escribir_centrado(texto, font, size, salto):
         nonlocal y
 
         c.setFont(font, size)
 
-        lineas = wrap(texto, max_chars) if texto else [""]
+        if y <= margen_inferior:
+            nueva_pagina()
+            c.setFont(font, size)
 
-        for linea in lineas:
+        text_width = c.stringWidth(texto, font, size)
+        x = (width - text_width) / 2
 
-            if y <= margen_inferior:
-                nueva_pagina()
-                c.setFont(font, size)
+        c.drawString(x, y, texto)
+        y -= salto
+    def escribir_linea(texto, font, size, salto):
 
-            c.drawString(margen_x, y, linea)
+        nonlocal y
 
-            y -= salto
+        if y <= margen_inferior:
+            nueva_pagina()
 
+        c.setFont(font, size)
+
+        # 🔥 IMPORTANTE: color después del cambio de página
+        if "URGE" in texto:
+            c.setFillColor(colors.red)
+        else:
+            c.setFillColor(colors.black)
+
+        c.drawString(margen_x, y, texto)
+
+        y -= salto
     lineas = info.split("\n")
     primera_categoria = True
 
@@ -936,8 +957,9 @@ def crear_pdf_inventario(info: str, ruta_pdf: str):
 
         linea = linea.strip()
 
+        # Encabezado principal
         if i == 0:
-            escribir_linea(linea, "Courier-Bold", 22, 30)
+            escribir_centrado(linea, "Courier-Bold", 22, 30)
 
         elif linea.startswith("Elaborado por"):
             escribir_linea(linea, "Courier", 16, 24)
@@ -945,7 +967,8 @@ def crear_pdf_inventario(info: str, ruta_pdf: str):
         elif linea.startswith("Notas"):
             escribir_linea(linea, "Courier", 16, 24)
 
-        elif linea.startswith("CATEGORIA"):
+        # Categorías
+        elif linea.isupper() and len(linea) < 30:
             if not primera_categoria:
                 nueva_pagina()
 
@@ -956,12 +979,18 @@ def crear_pdf_inventario(info: str, ruta_pdf: str):
         elif linea.startswith("----"):
             escribir_linea(linea, "Courier", 14, 20)
 
-        elif linea.startswith("Producto"):
-            escribir_linea(linea, "Courier", 16, 22)
+        # Producto
+        elif "Producto" in linea and "Existencia" in linea:
+            escribir_linea(linea, "Courier-Bold", 16, 22)
 
         elif linea.startswith("Existencia"):
             escribir_linea(linea, "Courier", 16, 22)
 
+        # NUEVO: Se acabó
+        elif linea.startswith("Se acabó"):
+            escribir_linea(linea, "Courier", 16, 22)
+
+        #URGE destacado
         elif "URGE" in linea:
             escribir_linea(linea, "Courier-Bold", 16, 22)
 
@@ -970,41 +999,66 @@ def crear_pdf_inventario(info: str, ruta_pdf: str):
 
     c.save()
 
+def enviar_correo_backend(negocio_id, mensaje, ruta_pdf):
+
+    db = get_firestore()
+    print(negocio_id)
+    ref = negocio_ref(negocio_id)
+    print(ref)
+    doc = ref.get()
+    print(doc)
+    if not doc.exists:
+        raise Exception("Negocio no encontrado")
+
+    datos = doc.to_dict()
+
+    user = datos.get('correo')
+    password = datos.get('password')
+    destino = datos.get('destino')
+
+    if not user or not password or not destino:
+        raise Exception("Faltan datos de configuración de correo")
+
+    enviar_correo(user, password, destino, mensaje, ruta_pdf)
+
 #Primero tenemos que crear una contrasena de aplicaciones en el gmail
 def enviar_correo(email,contra,recipent,info,ruta_pdf):
-    mensaje=MIMEMultipart()  #De aqui a la linea 11 comienza la configuracion del correo
-    mensaje['From']=email
-    mensaje['To']=recipent
-    mensaje['Subject']='Envio de inventario'  #Asunto
-    #Adjuntar una imagen al correooooo
-    body=f"""\
-    <html>
-        <body>
-            <h1>Correo desde Python</h1>
-            <p>{info}</p>
-        </body>
-    </html>
-    """
-    mensaje.attach(MIMEText(body,'html')) #Este es plain porque es solo texto, pero lo puedo poner como html
-    # Adjuntar PDF
-    with open(ruta_pdf, "rb") as archivo:
-        parte = MIMEBase("application", "octet-stream")
-        parte.set_payload(archivo.read())
-    encoders.encode_base64(parte)
+    try:
+        mensaje=MIMEMultipart()  #De aqui a la linea 11 comienza la configuracion del correo
+        mensaje['From']=email
+        mensaje['To']=recipent
+        mensaje['Subject']='Envio de inventario'  #Asunto
+        #Adjuntar una imagen al correooooo
+        body = f"""
+        <html>
+            <body>
+                <h2>Inventario generado</h2>
+                <p>{info}</p>
+                <p>Adjunto encontrarás el inventario en PDF.</p>
+            </body>
+        </html>
+        """
+        mensaje.attach(MIMEText(body,'html')) #Este es plain porque es solo texto, pero lo puedo poner como html
+        # Adjuntar PDF
+        with open(ruta_pdf, "rb") as archivo:
+            parte = MIMEBase("application", "octet-stream")
+            parte.set_payload(archivo.read())
+        encoders.encode_base64(parte)
 
-    parte.add_header(
-        "Content-Disposition",
-        "attachment",
-        filename= ruta_pdf,
-    )
+        parte.add_header(
+            "Content-Disposition",
+            f'attachment; filename="{os.path.basename(ruta_pdf)}"'
+        )
+        mensaje.attach(parte)
+        
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
+                    smtp.login(email, contra)
+                    smtp.send_message(mensaje)
+        print("Correo enviado correctamente")
 
-    mensaje.attach(parte)
-    
-    smtp_server=smtplib.SMTP('smtp.gmail.com',587)  #Servidor de gmail
-    smtp_server.starttls()
-    smtp_server.login(email,contra)  #iniciar sesion
-    smtp_server.sendmail(email,recipent,mensaje.as_string())
-    smtp_server.quit()
+    except Exception as e:
+        print("Error al enviar correo:", str(e))
+        raise e
 
 
 #Eliminar usuario
