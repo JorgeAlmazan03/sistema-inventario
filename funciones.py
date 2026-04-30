@@ -3,7 +3,7 @@ from firebase_admin import credentials, firestore
 
 from dotenv import load_dotenv
 import os
-
+from datetime import datetime
 from security import hash_password,verify_password
 from google.cloud.firestore_v1 import FieldFilter
 import smtplib
@@ -32,6 +32,21 @@ def get_firestore():
 
 NEGOCIO_ID='Prueba1'
 
+def obtener_fecha(inv):
+    try:
+        partes = inv.split("-")
+        dia = int(partes[0])
+        mes = int(partes[1])
+        año = partes[2]
+
+        # quitar (1), (2), etc
+        if "(" in año:
+            año = año.split("(")[0]
+
+        return datetime(int(año), mes, dia)
+
+    except:
+        return datetime.min  # fallback
 #Crear negocio
 def crear_negocio(negocio_id,nombre):
     db = get_firestore()
@@ -48,7 +63,7 @@ def crear_negocio(negocio_id,nombre):
             'nombre':'admin',
             'password':hash_password('admin'),
             'rol':'admin',
-            'usuario':'admin'
+            'usuario':'init'
             
         })
         negocio_ref.collection('inventarios').document('base').set({

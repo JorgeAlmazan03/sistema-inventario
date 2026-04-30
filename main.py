@@ -8,7 +8,7 @@ from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 from fastapi import BackgroundTasks
 from funciones import obtener_inventario_completo,eliminar_producto_base,crear_usuario,obtener_inventario_mas_reciente_2,obtener_penultimo_inventario
-from funciones import eliminar_subcoleccion,copiar_inventario_base_a_sucursal,lista_negocios,eliminar_negocio,get_firestore
+from funciones import eliminar_subcoleccion,copiar_inventario_base_a_sucursal,lista_negocios,eliminar_negocio,get_firestore,obtener_fecha
 from funciones import obtener_empleados,inventario_ref,negocio_ref,autenticar_usuario,crear_sucursal,crear_negocio,enviar_correo_backend
 from funciones import inventario_a_texto,crear_pdf_inventario,crear_producto_3,crear_subcoleccion_3,editar_stocks_2,lista_sucursales,inventario_ref_2
 from funciones import obtener_inventario_completo_2,agregar_existencia_producto_2,entrada_de_producto,eliminar_usuario,obtener_lista_inventarios_2
@@ -851,7 +851,7 @@ def ver_historial_inventarios(
     negocio_id = session["negocio_id"]
 
     inventarios = obtener_lista_inventarios_2(negocio_id, sucursal)
-
+    inventarios.sort(key=obtener_fecha, reverse=True)
     meses = [
         "Enero","Febrero","Marzo","Abril","Mayo","Junio",
         "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"
@@ -868,8 +868,8 @@ def ver_historial_inventarios(
             año = partes[2]
             extra=""
             if len(partes) > 3 and "(" in partes[3]:
-                sucursal = partes[3]
-                extra = sucursal[sucursal.find("("):]  # desde '(' hasta el final
+                sucursal_c = partes[3]
+                extra = sucursal_c[sucursal_c.find("("):]  # desde '(' hasta el final
             fecha_formateada = f"{dia} de {meses[mes-1]} del {año} {extra}"
 
         except:

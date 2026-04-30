@@ -291,8 +291,8 @@ btnTop.innerText = "Inventario guardado ✔";
 btnBottom.innerText = "Inventario guardado ✔";
 
 if(USER_ROL==="empleado"){
-await fetch("/logout",{method:"POST"});
-window.location.href="/";
+await fetch("/inventario-empleado",{method:"GET"});
+window.location.href="/inventario-empleado";
 return;
 }
 
