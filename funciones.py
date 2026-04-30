@@ -1002,11 +1002,8 @@ def crear_pdf_inventario(info: str, ruta_pdf: str):
 def enviar_correo_backend(negocio_id, mensaje, ruta_pdf):
 
     db = get_firestore()
-    print(negocio_id)
     ref = negocio_ref(negocio_id)
-    print(ref)
     doc = ref.get()
-    print(doc)
     if not doc.exists:
         raise Exception("Negocio no encontrado")
 
@@ -1054,10 +1051,8 @@ def enviar_correo(email,contra,recipent,info,ruta_pdf):
         with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
                     smtp.login(email, contra)
                     smtp.send_message(mensaje)
-        print("Correo enviado correctamente")
 
     except Exception as e:
-        print("Error al enviar correo:", str(e))
         raise e
 
 
