@@ -1051,8 +1051,9 @@ def enviar_correo(email,contra,recipent,info,ruta_pdf):
         with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
                     smtp.login(email, contra)
                     smtp.send_message(mensaje)
-
+        print('Correo enviado')
     except Exception as e:
+        print(e)
         raise e
 
 
