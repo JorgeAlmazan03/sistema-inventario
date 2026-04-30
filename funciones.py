@@ -1015,12 +1015,16 @@ def enviar_correo_backend(negocio_id, mensaje, ruta_pdf):
 
     if not user or not password or not destino:
         raise Exception("Faltan datos de configuración de correo")
-
+    print("ANTES DE SMTP")
     enviar_correo(user, password, destino, mensaje, ruta_pdf)
 
 #Primero tenemos que crear una contrasena de aplicaciones en el gmail
 def enviar_correo(email,contra,recipent,info,ruta_pdf):
+    print("ANTES DE SMTP")
     try:
+        print("Intentando enviar correo...")
+        print("FROM:", email)
+        print("TO:", recipent)
         mensaje=MIMEMultipart()  #De aqui a la linea 11 comienza la configuracion del correo
         mensaje['From']=email
         mensaje['To']=recipent
@@ -1055,7 +1059,7 @@ def enviar_correo(email,contra,recipent,info,ruta_pdf):
     except Exception as e:
         print(e)
         raise e
-
+    print('Despues')
 
 #Eliminar usuario
 #Eliminar
