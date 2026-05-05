@@ -932,7 +932,7 @@ def entrada_a_texto(fecha, sucursal, elaborador, inventario):
         lineas.append("-" * 55)
 
         for p in productos:
-            linea = f"{p['producto']}  +{p['existencia']} {p['unidad']}     Existencia: {p['existencia']} {p['unidad']}"
+            linea = f"{p['producto']}  +{p['entrada']} {p['unidad']}     Existencia: {p['existencia']} {p['unidad']}"
             lineas.append(linea)
 
         lineas.append("")

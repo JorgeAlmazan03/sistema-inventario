@@ -8,7 +8,7 @@ from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 from fastapi import BackgroundTasks
 from funciones import obtener_inventario_completo,eliminar_producto_base,crear_usuario,obtener_inventario_mas_reciente_2,obtener_penultimo_inventario
-from funciones import eliminar_subcoleccion,copiar_inventario_base_a_sucursal,lista_negocios,eliminar_negocio,get_firestore,obtener_fecha
+from funciones import eliminar_subcoleccion,copiar_inventario_base_a_sucursal,lista_negocios,eliminar_negocio,get_firestore,obtener_fecha,obtener_productos_2
 from funciones import obtener_empleados,inventario_ref,negocio_ref,autenticar_usuario,crear_sucursal,crear_negocio,enviar_correo_backend,entrada_a_texto
 from funciones import inventario_a_texto,crear_pdf_inventario,crear_producto_3,crear_subcoleccion_3,editar_stocks_2,lista_sucursales,inventario_ref_2
 from funciones import obtener_inventario_completo_2,agregar_existencia_producto_2,entrada_de_producto,eliminar_usuario,obtener_lista_inventarios_2
@@ -792,12 +792,24 @@ def apiEntradaProducto(payload: EntradaInventarioPayload,
                                 producto.producto,
                                 producto.entrada)
             
+            productos_actuales = obtener_productos_2(
+                subcoleccion,
+                negocio_id,
+                sucursal,
+                'base'
+            )
+
+            prod_actual = next(
+                (p for p in productos_actuales if p["producto"] == producto.producto),
+                None
+            )
+
             inventario_entrada[subcoleccion].append({
                 "producto": producto.producto,
-                "existencia": producto.entrada,  # entrada
+                'entrada':producto.entrada,
+                "existencia": prod_actual["existencia"] if prod_actual else producto.entrada,
                 "unidad": producto.unidad,
-                "se_acabo": 0,
-                "urge": False
+                "urge": prod_actual["urge"] if prod_actual else False
             })
         tz = timezone(timedelta(hours=-7))
     now = datetime.now(tz)
