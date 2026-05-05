@@ -210,7 +210,8 @@ button:active {
                    min="0"
                    placeholder="Cantidad a ingresar"
                    data-subcoleccion="{{ subcoleccion }}"
-                   data-producto="{{ producto.id }}">
+                   data-producto="{{ producto.id }}"
+                   data-unidad="{{ producto.unidad }}">
         </div>
         {% endfor %}
 
@@ -238,7 +239,7 @@ document.getElementById("entradaForm").addEventListener("submit", async function
     document.querySelectorAll("input[type='number']").forEach(input => {
 
         let entrada = parseFloat(input.value);
-
+        
         if (!entrada) return;
 
         if (entrada < 0) {
@@ -248,6 +249,7 @@ document.getElementById("entradaForm").addEventListener("submit", async function
 
         let sub = input.dataset.subcoleccion;
         let prod = input.dataset.producto;
+        let unidad = input.dataset.unidad;
 
         if (!inventario[sub]) {
             inventario[sub] = {};
@@ -255,7 +257,8 @@ document.getElementById("entradaForm").addEventListener("submit", async function
 
         inventario[sub][prod] = {
             producto: prod,
-            entrada: entrada
+            entrada: entrada,
+            unidad:unidad
         };
     });
 

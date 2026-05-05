@@ -7,7 +7,6 @@
 
     <style>
         * { box-sizing: border-box; }
-
         body {
             font-family: Arial, sans-serif;
             background: #f4f6f8;
@@ -15,14 +14,15 @@
             padding: 0;
             min-height: 100vh;
             display: flex;
-            align-items: center;
+            flex-direction: column; 
             justify-content: center;
         }
 
         .login-container {
-            width: 100%;
-            max-width: 380px;
-            padding: 1rem;
+            flex: 1; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .card {
@@ -112,7 +112,11 @@
         <input type="password" id="password">
 
         <button onclick="login()">Entrar</button>
-
+        <p style="font-size:12px; text-align:center; margin-top:10px;">
+            Al iniciar sesión aceptas nuestro 
+            <a href="/privacidad">Aviso de Privacidad</a> y 
+            <a href="/terminos">Términos y Condiciones</a>
+        </p>
         <div id="mensaje" class="mensaje"></div>
 
         <div class="footer">
@@ -120,7 +124,14 @@
         </div>
     </div>
 </div>
-
+<footer style="margin-top: 40px; text-align:center; font-size:14px; color:#666;">
+    <hr>
+    <p>
+        © 2026 Inventario Time |
+        <a href="/privacidad">Aviso de Privacidad</a> |
+        <a href="/terminos">Términos y Condiciones</a>
+    </p>
+</footer>
 <script>
 async function login() {
     const negocio = document.getElementById("negocio").value.trim();

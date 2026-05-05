@@ -521,6 +521,7 @@ def obtener_productos_2(subcoleccion,negocio_id,sucursal,dia:str):
             "existencia": data.get("existencia", 0),
             'unidad':data.get('unidad','Unidades'),
             'urge':data.get('urge',False),
+            'se_acabo':data.get('se_acabo',0),
             'minimo':data.get('minimo',0),
             'maximo':data.get('maximo',1000)
         })
@@ -910,6 +911,28 @@ def inventario_a_texto(fecha, sucursal, elaborador, notas, inventario: dict) -> 
             if p.get("urge"):
                 linea += "¡URGE!"
 
+            lineas.append(linea)
+
+        lineas.append("")
+
+    return "\n".join(lineas)
+
+def entrada_a_texto(fecha, sucursal, elaborador, inventario):
+
+    lineas = []
+
+    lineas.append(f"{fecha}     ENTRADA - {sucursal.upper()}")
+    lineas.append(f"Elaborado por: {elaborador}")
+    lineas.append("=" * 55)
+    lineas.append("")
+
+    for categoria, productos in inventario.items():
+
+        lineas.append(categoria.upper())
+        lineas.append("-" * 55)
+
+        for p in productos:
+            linea = f"{p['producto']}  +{p['existencia']} {p['unidad']}     Existencia: {p['existencia']} {p['unidad']}"
             lineas.append(linea)
 
         lineas.append("")

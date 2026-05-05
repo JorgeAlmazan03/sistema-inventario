@@ -6,149 +6,188 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f4f6f8;
-            padding: 20px;
-            margin: 0;
-        }
 
-        .form-card {
-            max-width: 420px;
-            margin: auto;
-            background: white;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-        }
+:root {
+    --primary: #2563eb;
+    --primary-dark: #1e3a8a;
+    --bg: #f3f4f6;
+    --card: #ffffff;
+    --border: #e5e7eb;
+    --text: #111827;
+    --muted: #6b7280;
+}
 
-        h2 {
-            text-align: center;
-            margin-bottom: 20px;
-        }
+/* ===== BODY ===== */
+body {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    margin: 0;
+    padding: 1rem;
+    background: var(--bg);
+    color: var(--text);
 
-        label {
-            font-weight: bold;
-            display: block;
-            margin-top: 15px;
-        }
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
 
-        input, select, button {
-            width: 100%;
-            padding: 12px;
-            margin-top: 6px;
-            font-size: 16px;
-        }
+/* ===== CONTENEDOR ===== */
+.container {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
 
-        button {
-            margin-top: 20px;
-            background: #2c3e50;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-        }
+/* ===== CARD ===== */
+.card {
+    background: var(--card);
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    padding: 25px;
+    width: 100%;
+    max-width: 420px;
+}
 
-        button:hover {
-            background: #34495e;
-        }
+/* ===== TITULO ===== */
+h2 {
+    text-align: center;
+    margin-bottom: 20px;
+}
 
-        .secondary-btn {
-            background: #7f8c8d;
-        }
+/* ===== INPUTS ===== */
+label {
+    font-weight: 600;
+    display: block;
+    margin-top: 15px;
+}
 
-        .secondary-btn:hover {
-            background: #95a5a6;
-        }
+input, select {
+    width: 100%;
+    padding: 10px;
+    margin-top: 6px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    font-size: 14px;
+}
 
-        .inline-btn {
-            margin-top: 10px;
-            background: #8e44ad;
-        }
+/* ===== FILA STOCK ===== */
+.stock-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
 
-        .inline-btn:hover {
-            background: #9b59b6;
-        }
-        .stock-row {
-            display: flex;
-            gap: 16px;
-            margin-top: 10px;
-        }
+.stock-row div {
+    flex: 1;
+}
 
-        .stock-field {
-            flex: 1;
-        }
+/* ===== BOTONES ===== */
+button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 15px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+    color: white;
+    background: var(--primary);
+    transition: .2s;
+}
 
-        .stock-field input {
-            width: 100%;
-            max-width: 140px; /* 🔹 tamaño controlado */
-        }
+button:hover {
+    background: var(--primary-dark);
+}
 
-        @media (max-width: 480px) {
-            .form-card {
-                padding: 20px;
-            }
-        }
-    </style>
+.btn-secondary {
+    background: #6b7280;
+}
+
+.btn-secondary:hover {
+    background: #4b5563;
+}
+
+.inline-btn {
+    background: #8e44ad;
+}
+
+.inline-btn:hover {
+    background: #9b59b6;
+}
+
+/* ===== FOOTER ===== */
+footer {
+    text-align: center;
+    font-size: 14px;
+    color: #666;
+    padding: 15px;
+}
+
+</style>
 </head>
 
 <body>
 
-<div class="form-card">
-    <h2>Agregar producto</h2>
+<div class="container">
+<div class="card">
 
-    <form id="productoForm">
-        <label>Producto</label>
-        <input type="text" name="producto" required>
+<h2>Agregar producto</h2>
 
-        <label>Unidad</label>
-        <select name="unidad" required>
-            <option value="kg">Kg</option>
-            <option value="piezas">Piezas</option>
-            <option value="gramos">Gramos</option>
-            <option value="litros">Litros</option>
-            <option value="paquetes">Paquetes</option>
-        </select>
+<form id="productoForm">
 
-        <label>Categoría</label>
-        <select name="subcoleccion" id="categoriasSelect" required>
-            <option value="">Cargando categorías...</option>
-        </select>
-        <div class="stock-row">
-            <div class="stock-field">
-                <label>Stock mínimo</label>
-                <input
-                    type="number"
-                    name="stock_min"
-                    min="0"
-                    step="1"
-                    required
-                >
-            </div>
+<label>Producto</label>
+<input type="text" name="producto" required>
 
-            <div class="stock-field">
-                <label>Stock máximo</label>
-                <input
-                    type="number"
-                    name="stock_max"
-                    min="0"
-                    step="1"
-                    required
-                >
-            </div>
-        </div>
-        <button type="button" class="inline-btn" onclick="crearSubcoleccion()">
-            + Nueva categoría
-        </button>
+<label>Unidad</label>
+<select name="unidad" required>
+    <option value="kg">Kg</option>
+    <option value="piezas">Piezas</option>
+    <option value="gramos">Gramos</option>
+    <option value="litros">Litros</option>
+    <option value="paquetes">Paquetes</option>
+</select>
 
-        <button type="submit">Crear producto</button>
-    </form>
+<label>Categoría</label>
+<select name="subcoleccion" id="categoriasSelect" required>
+    <option value="">Cargando...</option>
+</select>
 
-    <button class="secondary-btn"
-            onclick="window.location.href='/inventario'">
-        ← Regresar al inventario
-    </button>
+<div class="stock-row">
+    <div>
+        <label>Stock mínimo</label>
+        <input type="number" name="stock_min" required>
+    </div>
+
+    <div>
+        <label>Stock máximo</label>
+        <input type="number" name="stock_max" required>
+    </div>
 </div>
+
+<button type="button" class="inline-btn" onclick="crearSubcoleccion()">
+    + Nueva categoría
+</button>
+
+<button type="submit">Crear producto</button>
+
+</form>
+
+<button class="btn-secondary" onclick="window.location.href='/productos'">
+    ← Regresar
+</button>
+
+</div>
+</div>
+
+<footer>
+    <hr>
+    <p>
+        © 2026 Inventario Time |
+        <a href="/privacidad">Aviso de Privacidad</a> |
+        <a href="/terminos">Términos y Condiciones</a>
+    </p>
+</footer>
+
 
 <script>
 async function crearSubcoleccion() {

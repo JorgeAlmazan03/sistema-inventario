@@ -9,7 +9,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from fastapi import BackgroundTasks
 from funciones import obtener_inventario_completo,eliminar_producto_base,crear_usuario,obtener_inventario_mas_reciente_2,obtener_penultimo_inventario
 from funciones import eliminar_subcoleccion,copiar_inventario_base_a_sucursal,lista_negocios,eliminar_negocio,get_firestore,obtener_fecha
-from funciones import obtener_empleados,inventario_ref,negocio_ref,autenticar_usuario,crear_sucursal,crear_negocio,enviar_correo_backend
+from funciones import obtener_empleados,inventario_ref,negocio_ref,autenticar_usuario,crear_sucursal,crear_negocio,enviar_correo_backend,entrada_a_texto
 from funciones import inventario_a_texto,crear_pdf_inventario,crear_producto_3,crear_subcoleccion_3,editar_stocks_2,lista_sucursales,inventario_ref_2
 from funciones import obtener_inventario_completo_2,agregar_existencia_producto_2,entrada_de_producto,eliminar_usuario,obtener_lista_inventarios_2
 from pydantic import BaseModel
@@ -34,12 +34,14 @@ class ProductoModel(BaseModel):
     existencia:float=0
     unidad:str
     urge:bool=False
+    se_acabo:float=0
     minimo:Optional[int]=None
     maximo:Optional[int]=None
     
 class ProductoEntradaModel(BaseModel):
     producto: str
     entrada: float
+    unidad:str
     
 class EntradaInventarioPayload(BaseModel):
     fecha: str
@@ -67,6 +69,20 @@ def generar_y_enviar(info, ruta, negocio_id):
     enviar_correo_backend(negocio_id,"Correo de Inventario Time",ruta)
     if os.path.exists(ruta):
         os.remove(ruta)
+def generar_y_enviar_entrada(negocio_id, info, ruta):
+
+    crear_pdf_inventario(info, ruta)
+
+    enviar_correo_backend(
+        negocio_id,
+        "Entrada de producto registrada",
+        ruta
+    )
+
+    import os
+    if os.path.exists(ruta):
+        os.remove(ruta)
+
 #Login
 @app.get("/", response_class=HTMLResponse)
 def vista_login(request: Request):
@@ -759,13 +775,15 @@ def ver_penultimo_inventario(
 #Entrada de producto
 @app.post('/inventario/{sucursal}/entrada')
 @requiere_negocio_activo
-def apiEntradaProducto(payload: EntradaInventarioPayload,sucursal:str,session=Depends(requiere_sesion)):
+def apiEntradaProducto(payload: EntradaInventarioPayload,
+                       background_tasks: BackgroundTasks,
+                       sucursal:str,session=Depends(requiere_sesion)):
     negocio_id = session["negocio_id"]
     sucursal=sucursal.strip()
     inventario=payload.inventario
-    
+    inventario_entrada = {}
     for subcoleccion, productos in inventario.items():
-        
+        inventario_entrada[subcoleccion] = []
         for producto in productos.values():
 
             entrada_de_producto(negocio_id,
@@ -773,7 +791,29 @@ def apiEntradaProducto(payload: EntradaInventarioPayload,sucursal:str,session=De
                                 subcoleccion,
                                 producto.producto,
                                 producto.entrada)
+            
+            inventario_entrada[subcoleccion].append({
+                "producto": producto.producto,
+                "existencia": producto.entrada,  # entrada
+                "unidad": producto.unidad,
+                "se_acabo": 0,
+                "urge": False
+            })
+    fecha = datetime.now().strftime("%d-%m-%Y")
+    info = entrada_a_texto(
+    fecha,
+    sucursal,
+    session['nombre'],
+    inventario_entrada
+    )
 
+    ruta = f"entrada-{fecha}-{sucursal}.pdf"
+    background_tasks.add_task(
+    generar_y_enviar_entrada,
+    negocio_id,
+    info,
+    ruta
+    )
 @app.get("/inventario/{sucursal}/entrada")
 @requiere_negocio_activo
 def EntradaSucursal(
@@ -1249,3 +1289,18 @@ async def debug_payload(request: Request):
 @app.get("/healthz")
 def health():
     return {"status": "ok"}
+
+@app.get("/privacidad", response_class=HTMLResponse)
+def privacidad(request: Request):
+    return templates.TemplateResponse(
+        "privacidad.html",
+        {"request": request}
+    )
+
+
+@app.get("/terminos", response_class=HTMLResponse)
+def terminos(request: Request):
+    return templates.TemplateResponse(
+        "terminos.html",
+        {"request": request}
+    )

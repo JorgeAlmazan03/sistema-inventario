@@ -5,88 +5,140 @@
     <title>Crear Categoría</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f4f6f8;
-            padding: 20px;
-            margin: 0;
-        }
+<style>
 
-        .form-card {
-            max-width: 420px;
-            margin: auto;
-            background: white;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-        }
+:root {
+    --primary: #2563eb;
+    --primary-dark: #1e3a8a;
+    --bg: #f3f4f6;
+    --card: #ffffff;
+    --border: #e5e7eb;
+    --text: #111827;
+    --muted: #6b7280;
+}
 
-        h2 {
-            text-align: center;
-            margin-bottom: 20px;
-        }
+/* ===== BODY ===== */
+body {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    margin: 0;
+    padding: 1rem;
+    background: var(--bg);
+    color: var(--text);
 
-        label {
-            font-weight: bold;
-            display: block;
-            margin-top: 15px;
-        }
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
 
-        input, button {
-            width: 100%;
-            padding: 12px;
-            margin-top: 6px;
-            font-size: 16px;
-        }
+/* ===== CONTENEDOR ===== */
+.container {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
 
-        button {
-            margin-top: 20px;
-            background: #2c3e50;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-        }
+/* ===== CARD ===== */
+.card {
+    background: var(--card);
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    padding: 25px;
+    width: 100%;
+    max-width: 420px;
+}
 
-        button:hover {
-            background: #34495e;
-        }
+/* ===== TITULO ===== */
+h2 {
+    text-align: center;
+    margin-bottom: 20px;
+}
 
-        .back-btn {
-            background: #7f8c8d;
-        }
+/* ===== INPUTS ===== */
+label {
+    font-weight: 600;
+    display: block;
+    margin-top: 15px;
+}
 
-        .back-btn:hover {
-            background: #95a5a6;
-        }
+input {
+    width: 100%;
+    padding: 10px;
+    margin-top: 6px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    font-size: 14px;
+}
 
-        @media (max-width: 480px) {
-            .form-card {
-                padding: 20px;
-            }
-        }
-    </style>
+/* ===== BOTONES ===== */
+button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 15px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+    color: white;
+    background: var(--primary);
+    transition: .2s;
+}
+
+button:hover {
+    background: var(--primary-dark);
+}
+
+.btn-secondary {
+    background: #6b7280;
+}
+
+.btn-secondary:hover {
+    background: #4b5563;
+}
+
+/* ===== FOOTER ===== */
+footer {
+    text-align: center;
+    font-size: 14px;
+    color: #666;
+    padding: 15px;
+}
+
+</style>
 </head>
 
 <body>
 
-<div class="form-card">
-    <h2>Crear categoría</h2>
+<div class="container">
+<div class="card">
 
-    <form id="subcoleccionForm">
-        <label>Nombre de la categoría</label>
-        <input type="text" name="subcoleccion" placeholder="Ej: congelados" required>
+<h2>Crear categoría</h2>
 
-        <button type="submit">Crear categoría</button>
+<form id="subcoleccionForm">
 
-        <button type="button" class="back-btn"
-                onclick="window.location.href='/inventario'">
-            ← Regresar al inventario
-        </button>
-    </form>
+<label>Nombre de la categoría</label>
+<input type="text" name="subcoleccion" placeholder="Ej: congelados" required>
+
+<button type="submit">Crear categoría</button>
+
+<button type="button" class="btn-secondary"
+        onclick="window.location.href='/productos'">
+    ← Regresar
+</button>
+
+</form>
+
+</div>
 </div>
 
+<footer>
+    <hr>
+    <p>
+        © 2026 Inventario Time |
+        <a href="/privacidad">Aviso de Privacidad</a> |
+        <a href="/terminos">Términos y Condiciones</a>
+    </p>
+</footer>
 <script>
 const form = document.getElementById("subcoleccionForm");
 
