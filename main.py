@@ -799,7 +799,9 @@ def apiEntradaProducto(payload: EntradaInventarioPayload,
                 "se_acabo": 0,
                 "urge": False
             })
-    fecha = datetime.now().strftime("%d-%m-%Y")
+        tz = timezone(timedelta(hours=-7))
+    now = datetime.now(tz)
+    fecha = now.strftime("%d-%m-%Y")
     info = entrada_a_texto(
     fecha,
     sucursal,
