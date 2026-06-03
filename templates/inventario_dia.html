@@ -238,7 +238,61 @@ Inventario {{ partes[0] }} de {{ meses[partes[1]] }} de {{partes[2]}} - {{ parte
 {% endif %}
 
 <div class="dashboard">
+{% if favoritos %}
+<div class="card">
 
+    <div class="card-header"
+         onclick="toggle('favoritos')">
+        ⭐ Favoritos
+        <span class="badge">
+            {{ favoritos|length }}
+        </span>
+    </div>
+
+    <div class="card-content"
+         id="favoritos">
+
+        <ul>
+
+        {% for prod in favoritos %}
+
+        <li>
+
+            <span class="producto-nombre">
+                {{ prod.id | title }}
+            </span>
+
+            <div style="display:flex; flex-direction:column; align-items:flex-end;">
+
+                <span class="producto-existencia">
+                    {{ "%.10g"|format(prod.existencia) }}
+                    {{ prod.unidad }}
+                </span>
+
+                <span style="font-size:13px; color:#6b7280;">
+                    Se acabó:
+                    {{ "%.10g"|format(prod.se_acabo) }}
+                    {{ prod.unidad }}
+                </span>
+
+            </div>
+
+            {% if prod.urge %}
+            <span class="badge badge-urgente">
+                URGE
+            </span>
+            {% endif %}
+
+        </li>
+
+        {% endfor %}
+
+        </ul>
+
+    </div>
+
+</div>
+{% endif %}
 <!-- URGENTES -->
 <div class="card">
     <div class="card-header urgentes-header" onclick="toggle('urgentes')">

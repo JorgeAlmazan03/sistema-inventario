@@ -11,7 +11,7 @@ from funciones import obtener_inventario_completo,eliminar_producto_base,crear_u
 from funciones import eliminar_subcoleccion,copiar_inventario_base_a_sucursal,lista_negocios,eliminar_negocio,get_firestore,obtener_fecha,obtener_productos_2
 from funciones import obtener_empleados,inventario_ref,negocio_ref,autenticar_usuario,crear_sucursal,crear_negocio,enviar_correo_backend,entrada_a_texto
 from funciones import inventario_a_texto,crear_pdf_inventario,crear_producto_3,crear_subcoleccion_3,editar_stocks_2,lista_sucursales,inventario_ref_2
-from funciones import obtener_inventario_completo_2,agregar_existencia_producto_2,entrada_de_producto,eliminar_usuario,obtener_lista_inventarios_2
+from funciones import obtener_inventario_completo_2,agregar_existencia_producto_2,entrada_de_producto,eliminar_usuario,obtener_lista_inventarios_2,agregar_a_favoritos
 from pydantic import BaseModel
 from typing import Dict, List,Optional
 from security import hash_password
@@ -35,6 +35,7 @@ class ProductoModel(BaseModel):
     unidad:str
     urge:bool=False
     se_acabo:float=0
+    favorito:bool=False
     minimo:Optional[int]=None
     maximo:Optional[int]=None
     
@@ -338,6 +339,7 @@ def apiAgregarProducto(
     unidad: str = Body(...),
     minimo:str=Body(...),
     maximo:str=Body(...),
+    favorito:bool=Body(...),
     session=Depends(requiere_admin_api)
 ):
     negocio_id = session["negocio_id"]
@@ -356,7 +358,7 @@ def apiAgregarProducto(
                 detail="El producto ya existe"
             )
 
-        crear_producto_3(subcoleccion, producto_id,unidad,minimo,maximo,negocio_id)
+        crear_producto_3(subcoleccion, producto_id,unidad,minimo,maximo,negocio_id,favorito)
 
         return {
             "mensaje": "Producto creado correctamente",
@@ -408,6 +410,33 @@ def obtener_stocks_completos(session=Depends(requiere_admin_api)):
                 }
 
     return resultado
+
+@app.put("/favorito/{subcoleccion}/{producto}/inventario")
+@requiere_negocio_activo
+def apiAgregarFavorito(
+    subcoleccion:str,
+    producto:str,
+    favorito:bool,
+    session=Depends(requiere_admin_api)
+):
+    negocio_id=session['negocio_id']
+    producto_id=producto.lower()
+    inventario_id='base'
+    try:
+        ref = (
+            inventario_ref(negocio_id,inventario_id)
+              .collection(subcoleccion)
+              .document(producto_id)
+        )
+        if not ref.get().exists:
+            raise HTTPException(status_code=404, detail="Producto no existe")
+
+        agregar_a_favoritos(negocio_id,subcoleccion,producto_id,favorito)
+        return {"ok": True}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))    
 @app.put("/stocks/{subcoleccion}/{producto}/{sucursal}/inventario")
 @requiere_negocio_activo
 def apiEditarStock(
@@ -425,6 +454,7 @@ def apiEditarStock(
               .collection(subcoleccion)
               .document(producto_id)
         )
+        
 #Validar que el producto todavia no exista
         if not ref.get().exists:
             raise HTTPException(status_code=404, detail="Producto no existe")
@@ -647,7 +677,6 @@ def api_crear_inventario(payload: InventarioPayload,
             )
 
             base_doc = base_ref.get()
-
             existencia_base_anterior = 0
             minimo = None
 
@@ -655,6 +684,7 @@ def api_crear_inventario(payload: InventarioPayload,
                 base_data = base_doc.to_dict()
                 existencia_base_anterior = base_data.get("existencia", 0)
                 minimo = base_data.get("minimo")
+                favorito=base_data.get('favorito',False)
 
             se_acabo = max(0, existencia_base_anterior - producto.existencia)
 
@@ -665,14 +695,16 @@ def api_crear_inventario(payload: InventarioPayload,
                 "existencia": producto.existencia,
                 "unidad": producto.unidad,
                 "urge": urge,
-                "se_acabo":se_acabo
+                "se_acabo":se_acabo,
+                'favorito':favorito
             })
             inventario_final[subcoleccion].append({
             "producto": producto.producto,
             "existencia": producto.existencia,
             "unidad": producto.unidad,
             "urge": urge,
-            "se_acabo": se_acabo
+            "se_acabo": se_acabo,
+            'favorito':favorito
             })
             agregar_existencia_producto_2(
                 negocio_id,
@@ -875,6 +907,12 @@ def ExistenciaSucursal(
     negocio = doc.to_dict()
     activo = negocio.get("activo", True)
     inventario = obtener_inventario_completo_2(negocio_id,sucursal, inventario_id)
+    favoritos = []
+
+    for categoria, productos in inventario.items():
+        for producto in productos:
+            if producto.get("favorito"):
+                favoritos.append(producto)
     if not inventario:
         raise HTTPException(status_code=404, detail="Sucursal no encontrada")
     return templates.TemplateResponse(
@@ -887,7 +925,8 @@ def ExistenciaSucursal(
             "inventario": inventario,
             'rol':session['rol'],
             'nombre':session['nombre'],
-            'negocio_activo':activo
+            'negocio_activo':activo,
+            'favoritos':favoritos
         }
     )
 
@@ -952,6 +991,12 @@ def apiVerInventarioDia(dia:str,sucursal:str,request: Request,session=Depends(re
 
     negocio_id = session["negocio_id"]
     inventario = obtener_inventario_completo_2(negocio_id,sucursal,dia)
+    favoritos = []
+
+    for categoria, productos in inventario.items():
+        for producto in productos:
+            if producto.get("favorito"):
+                favoritos.append(producto)
     if not inventario:
         raise HTTPException(
         status_code=404,
@@ -962,7 +1007,8 @@ def apiVerInventarioDia(dia:str,sucursal:str,request: Request,session=Depends(re
         {
             "request": request,
             "inventario": inventario,
-            'dia':dia
+            'dia':dia,
+            'favoritos':favoritos
         }
     )
 @app.delete("/inventario/base/producto/{subcoleccion}/{producto_id}")

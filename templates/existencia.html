@@ -134,7 +134,33 @@ h2 {
 </div>
 
 <h2>Existencia de Producto - {{ sucursal }}</h2>
+{% if favoritos %}
+<div class="categoria">
 
+    <div class="categoria-header active"
+         onclick="toggleCategoria(this)">
+        ⭐ Favoritos ({{ favoritos|length }})
+    </div>
+
+    <div class="productos" style="display:block;">
+
+        {% for producto in favoritos %}
+        <div class="producto">
+
+            <strong>{{ producto.id | capitalize }}</strong>
+
+            <span class="existencia">
+                {{ "%.10g"|format(producto.existencia) }}
+                {{ producto.unidad }}
+            </span>
+
+        </div>
+        {% endfor %}
+
+    </div>
+
+</div>
+{% endif %}
 {% for subcoleccion, productos in inventario.items() %}
 <div class="categoria">
 

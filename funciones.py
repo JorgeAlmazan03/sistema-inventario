@@ -147,7 +147,7 @@ def crear_subcoleccion_3(subcoleccion,negocio_id,):
         return e
 
 #Crear producto en el inventario base del producto
-def crear_producto(subcoleccion,producto,unidad,negocio_id,minimo,maximo):
+def crear_producto(subcoleccion,producto,unidad,negocio_id,minimo,maximo,favorito):
     '''
     Docstring for crear_producto
     
@@ -173,7 +173,8 @@ def crear_producto(subcoleccion,producto,unidad,negocio_id,minimo,maximo):
           'unidad':unidad,
           'urge':False,
           'minimo':minimo,
-          'maximo':maximo
+          'maximo':maximo,
+          'favorito':(favorito,False)
       })
 def crear_producto_2(subcoleccion,producto,unidad,negocio_id,sucursal,minimo,maximo):
     '''
@@ -198,7 +199,7 @@ def crear_producto_2(subcoleccion,producto,unidad,negocio_id,sucursal,minimo,max
       })
 
 #Crea el producto en el inventario de todas las sucursales
-def crear_producto_3(subcoleccion,producto,unidad,minimo,maximo,negocio_id):
+def crear_producto_3(subcoleccion,producto,unidad,minimo,maximo,negocio_id,favorito):
     '''
     Docstring for crear_producto
     
@@ -224,9 +225,10 @@ def crear_producto_3(subcoleccion,producto,unidad,minimo,maximo,negocio_id):
           'unidad':unidad,
           'urge':False,
           'minimo':minimo,
-          'maximo':maximo
+          'maximo':maximo,
+          'favorito':favorito
         })
-    crear_producto(subcoleccion,producto,unidad,negocio_id,minimo,maximo)
+    crear_producto(subcoleccion,producto,unidad,negocio_id,minimo,maximo,favorito)
 def agregar_producto_inventario(negocio_id,dia,subcoleccion,producto,existencia,unidad,urge=False):
     existencia=float(existencia)
     inventario_ref(negocio_id, inventario_id=dia)\
@@ -405,6 +407,8 @@ def editar_stocks_2(negocio_id,sucursal,subcoleccion,producto,minimo,maximo,unid
         maximo=minimo+1
     if minimo is not None:
         data["minimo"] = minimo
+    if minimo <0:
+        data["minimo"] = 0
     if maximo is not None:
         data["maximo"] = maximo
     if unidad is not None:
@@ -421,7 +425,20 @@ def editar_stocks_2(negocio_id,sucursal,subcoleccion,producto,minimo,maximo,unid
 
     #Crea si no existe, actualiza si ya existe
     doc_ref.set(data, merge=True)
+def agregar_a_favoritos(negocio_id,subcoleccion,producto,favorito):
+    sucursales=lista_sucursales(negocio_id)
+    for sucursal in sucursales:
+        doc_ref=(inventario_ref_2(negocio_id, sucursal, 'base')
+            .collection(subcoleccion)
+            .document(producto)
+        )
+        doc_ref.update({'favorito':favorito})
+    inventario_ref(negocio_id,'base')\
+      .collection(subcoleccion) \
+      .document(producto) \
+      .update({'favorito':favorito})
 
+    
 def obtener_lista_inventarios(negocio_id):
     inventarios_ref = inventario_ref(negocio_id).parent.stream()
     lista = []
@@ -488,7 +505,8 @@ def obtener_productos(subcoleccion,negocio_id,dia:str):
             'unidad':data.get('unidad','Unidades'),
             'urge':data.get('urge',False),
             'minimo':data.get('minimo',0),
-            'maximo':data.get('maximo',1000)
+            'maximo':data.get('maximo',1000),
+            'favorito':data.get('favorito',False)
         })
 
     return productos
@@ -523,7 +541,8 @@ def obtener_productos_2(subcoleccion,negocio_id,sucursal,dia:str):
             'urge':data.get('urge',False),
             'se_acabo':data.get('se_acabo',0),
             'minimo':data.get('minimo',0),
-            'maximo':data.get('maximo',1000)
+            'maximo':data.get('maximo',1000),
+            'favorito':data.get('favorito',False)
         })
 
     return productos
@@ -820,7 +839,7 @@ def autenticar_usuario(negocio_id, usuario, password):
     
 def crear_sucursal(negocio_id,sucursal,encargado):
     '''
-    Docstring for crear_producto
+    Docstring for crear_sucursal
     
     :param db: Description
     :param subcoleccion: Description
@@ -890,6 +909,43 @@ def inventario_a_texto(fecha, sucursal, elaborador, notas, inventario: dict) -> 
     lineas.append(f"Notas: {notas}")
     lineas.append("=" * 55)
     lineas.append("")
+    favoritos = []
+
+    for categoria, productos in inventario.items():
+        for p in productos:
+            if p.get("favorito"):
+                favoritos.append(p)
+
+    if favoritos:
+
+        lineas.append("FAVORITOS")
+        lineas.append("-" * 55)
+
+        lineas.append(
+            f"{'Producto':<20} {'Existencia':<15} {'Se acabó':<15}"
+        )
+
+        lineas.append("-" * 55)
+
+        for p in favoritos:
+
+            producto = p["producto"][:20]
+            existencia = f"{p['existencia']} {p['unidad']}"
+            se_acabo = f"{p.get('se_acabo', 0)} {p['unidad']}"
+
+            linea = (
+                f"{producto:<20} "
+                f"{existencia:<15} "
+                f"{se_acabo:<15}"
+            )
+
+            if p.get("urge"):
+                linea += "¡URGE!"
+
+            lineas.append(linea)
+
+        lineas.append("")
+        lineas.append("")
 
     for categoria, productos in inventario.items():
 
@@ -925,7 +981,25 @@ def entrada_a_texto(fecha, sucursal, elaborador, inventario):
     lineas.append(f"Elaborado por: {elaborador}")
     lineas.append("=" * 55)
     lineas.append("")
+    favoritos = []
 
+    for categoria, productos in inventario.items():
+        for p in productos:
+            if p.get("favorito"):
+                favoritos.append(p)
+    if favoritos:
+        lineas.append("FAVORITOS")
+        lineas.append("-" * 55)
+
+        for p in favoritos:
+            linea = (
+                f"{p['producto']}  +{p['entrada']} {p['unidad']}     "
+                f"Existencia: {p['existencia']} {p['unidad']}"
+            )
+            lineas.append(linea)
+
+        lineas.append("")
+        lineas.append("")
     for categoria, productos in inventario.items():
 
         lineas.append(categoria.upper())
@@ -989,13 +1063,13 @@ def crear_pdf_inventario(info: str, ruta_pdf: str):
 
         y -= salto
     lineas = info.split("\n")
-    primera_categoria = True
+
+    ya_imprimi_categoria = False
 
     for i, linea in enumerate(lineas):
 
         linea = linea.strip()
 
-        # Encabezado principal
         if i == 0:
             escribir_centrado(linea, "Courier-Bold", 22, 30)
 
@@ -1005,30 +1079,37 @@ def crear_pdf_inventario(info: str, ruta_pdf: str):
         elif linea.startswith("Notas"):
             escribir_linea(linea, "Courier", 16, 24)
 
-        # Categorías
-        elif linea.isupper() and len(linea) < 30:
-            if not primera_categoria:
+        elif linea == "FAVORITOS":
+
+            escribir_linea("", "Courier", 10, 10)
+            escribir_linea("⭐ FAVORITOS", "Courier-Bold", 20, 28)
+
+        elif (
+            linea.isupper()
+            and len(linea) < 30
+            and linea != "FAVORITOS"
+        ):
+
+            if ya_imprimi_categoria:
                 nueva_pagina()
 
-            primera_categoria = False
+            ya_imprimi_categoria = True
+
             escribir_linea("", "Courier", 10, 10)
             escribir_linea(linea, "Courier-Bold", 18, 26)
 
         elif linea.startswith("----"):
             escribir_linea(linea, "Courier", 14, 20)
 
-        # Producto
         elif "Producto" in linea and "Existencia" in linea:
             escribir_linea(linea, "Courier-Bold", 16, 22)
 
         elif linea.startswith("Existencia"):
             escribir_linea(linea, "Courier", 16, 22)
 
-        # NUEVO: Se acabó
         elif linea.startswith("Se acabó"):
             escribir_linea(linea, "Courier", 16, 22)
 
-        #URGE destacado
         elif "URGE" in linea:
             escribir_linea(linea, "Courier-Bold", 16, 22)
 
@@ -1058,7 +1139,6 @@ def enviar_correo_backend(negocio_id, mensaje, ruta_pdf):
 #Primero tenemos que crear una contrasena de aplicaciones en el gmail
 def enviar_correo(email,contra,recipent,info,ruta_pdf):
     try:
-        print('intentando enviar correo')
         mensaje=MIMEMultipart()  #De aqui a la linea 11 comienza la configuracion del correo
         mensaje['From']=email
         mensaje['To']=recipent
@@ -1092,9 +1172,7 @@ def enviar_correo(email,contra,recipent,info,ruta_pdf):
         smtp_server.login(email,contra)  #iniciar sesion
         smtp_server.sendmail(email,recipent,mensaje.as_string())
         smtp_server.quit()
-        print('Listo')
     except Exception as e:
-        print(e)
         raise e
 
 #Eliminar usuario
@@ -1139,3 +1217,11 @@ def eliminar_negocio(negocio_id):
         raise ValueError('El negocio no existe')
     ref.delete() 
 
+if __name__=='__main__':
+    #agregar_a_favoritos('Prueba1','carne','arrachera',True)
+    #crear_producto_3('carne','arrachera','kg',0,10,'Prueba1')
+    #eliminar_producto_base('Prueba1','carne','arrachera')
+    #eliminar_producto_base('Prueba1','Carnes','arrachera')
+    #eliminar_subcoleccion('Prueba1','Carnes')
+        #print(obtener_productos('verdura','Prueba1','base'))
+        pass

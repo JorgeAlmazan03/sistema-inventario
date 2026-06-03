@@ -212,6 +212,44 @@ button:hover {
         width:auto;
     }
 }
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 46px;
+    height: 24px;
+}
+
+.switch input {
+    display: none;
+}
+
+.slider {
+    position: absolute;
+    inset: 0;
+    background: #d1d5db;
+    border-radius: 24px;
+    transition: .3s;
+}
+
+.slider:before {
+    content: "";
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    left: 3px;
+    top: 3px;
+    background: white;
+    border-radius: 50%;
+    transition: .3s;
+}
+
+.switch input:checked + .slider {
+    background: #2563eb;
+}
+
+.switch input:checked + .slider:before {
+    transform: translateX(22px);
+}
 </style>
 
 <script>
@@ -340,7 +378,29 @@ async function cargarStocks() {
         row.querySelector(".maximo").value = data.maximo || "";
     });
 }
+async function actualizarFavorito(subcoleccion, producto, favorito) {
 
+    try {
+
+        const response = await fetch(
+            `/favorito/${subcoleccion}/${producto}/inventario?favorito=${favorito}`,
+            {
+                method: "PUT"
+            }
+        );
+
+        if (!response.ok) {
+            const data = await response.json();
+            throw new Error(data.detail);
+        }
+
+    } catch (error) {
+
+        alert(error.message || "Error al actualizar favorito");
+        console.error(error);
+
+    }
+}
 window.addEventListener("DOMContentLoaded", cargarStocks);
 
 </script>
@@ -386,17 +446,47 @@ window.addEventListener("DOMContentLoaded", cargarStocks);
 
     <div style="display:flex; justify-content:space-between; align-items:center;">
 
-        <strong style="font-size:16px;">
-            {{ prod.id }}
-        </strong>
+    <strong style="font-size:16px;">
+        {{ prod.id }}
+    </strong>
+    Favorito: {{ prod.favorito }}
 
-        <button 
+    <div style="display:flex; align-items:center; gap:15px;">
+
+        <div style="display:flex; align-items:center; gap:8px;">
+
+            <span style="font-size:14px;">
+                Favorito
+            </span>
+
+            <label class="switch">
+
+                <input
+                    type="checkbox"
+                    {% if prod.favorito %}
+                    checked
+                    {% endif %}
+                    onchange="actualizarFavorito(
+                        '{{ categoria }}',
+                        '{{ prod.id }}',
+                        this.checked
+                    )">
+
+                <span class="slider"></span>
+
+            </label>
+
+        </div>
+
+        <button
             class="btn-delete"
             onclick="eliminarProducto('{{ categoria }}', '{{ prod.id }}')">
             Eliminar
         </button>
 
     </div>
+
+</div>
 
     <div style="margin-top:10px;">
 
