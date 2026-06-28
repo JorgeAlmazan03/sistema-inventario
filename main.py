@@ -1,13 +1,14 @@
 import os
+import pandas as pd
 from datetime import datetime, timedelta, timezone
 from functools import wraps
 from firebase_admin import credentials,firestore
 from fastapi import FastAPI, Request,Body,HTTPException,Depends
-from fastapi.responses import HTMLResponse,RedirectResponse
+from fastapi.responses import HTMLResponse,RedirectResponse, FileResponse
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 from fastapi import BackgroundTasks
-from funciones import obtener_inventario_completo,eliminar_producto_base,crear_usuario,obtener_inventario_mas_reciente_2,obtener_penultimo_inventario
+from funciones import crear_excel_inventario, obtener_inventario_completo,eliminar_producto_base,crear_usuario,obtener_inventario_mas_reciente_2,obtener_penultimo_inventario
 from funciones import eliminar_subcoleccion,copiar_inventario_base_a_sucursal,lista_negocios,eliminar_negocio,get_firestore,obtener_fecha,obtener_productos_2
 from funciones import obtener_empleados,inventario_ref,negocio_ref,autenticar_usuario,crear_sucursal,crear_negocio,enviar_correo_backend,entrada_a_texto
 from funciones import inventario_a_texto,crear_pdf_inventario,crear_producto_3,crear_subcoleccion_3,editar_stocks_2,lista_sucursales,inventario_ref_2
@@ -15,6 +16,10 @@ from funciones import obtener_inventario_completo_2,agregar_existencia_producto_
 from pydantic import BaseModel
 from typing import Dict, List,Optional
 from security import hash_password
+from openpyxl import load_workbook
+from openpyxl.styles import Font, Alignment
+from openpyxl.worksheet.table import Table, TableStyleInfo
+from openpyxl.utils import get_column_letter
 app = FastAPI(title="Inventario")
 app.add_middleware(
     SessionMiddleware,
@@ -1363,4 +1368,31 @@ def terminos(request: Request):
     return templates.TemplateResponse(
         "terminos.html",
         {"request": request}
+    )
+    
+@app.get('/crear/excel/{dia}/{sucursal}')
+def obtener_inventario_prueba(dia:str,sucursal:str,session=Depends(requiere_admin_api)):
+    negocio_id=session['negocio_id']
+    doc_ref=inventario_ref_2(negocio_id,sucursal,dia)
+    doc=doc_ref.get()
+    if doc.exists:
+        datos = doc.to_dict()
+        elaborado_por = datos.get("elaborado_por", "")
+    inventario = obtener_inventario_completo_2(
+        negocio_id,sucursal,dia
+    )
+
+    archivo = f"{dia}.xlsx"
+
+    crear_excel_inventario(
+        inventario,
+        sucursal,
+        dia,
+        elaborado_por
+    )
+
+    return FileResponse(
+        archivo,
+        filename=archivo,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )

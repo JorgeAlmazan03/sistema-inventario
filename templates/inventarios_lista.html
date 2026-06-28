@@ -1,149 +1,147 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Historial de Inventarios</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Historial de Inventarios</title>
 
-<style>
+    <style>
+      :root {
+        --primary: #2563eb;
+        --primary-dark: #1e40af;
+        --bg: #f8fafc;
+        --card: #ffffff;
+        --border: #e5e7eb;
+        --text: #111827;
+        --muted: #6b7280;
+      }
 
-:root{
---primary:#2563eb;
---primary-dark:#1e40af;
---bg:#f8fafc;
---card:#ffffff;
---border:#e5e7eb;
---text:#111827;
---muted:#6b7280;
-}
+      body {
+        font-family:
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          sans-serif;
+        background: var(--bg);
+        margin: 0;
+        padding: 20px;
+      }
 
-body{
-font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
-background:var(--bg);
-margin:0;
-padding:20px;
-}
+      .container {
+        max-width: 700px;
+        margin: auto;
+      }
 
-.container{
-max-width:700px;
-margin:auto;
-}
+      h2 {
+        margin-bottom: 20px;
+      }
 
-h2{
-margin-bottom:20px;
-}
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 15px;
+        margin-bottom: 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
 
-.card{
-background:var(--card);
-border:1px solid var(--border);
-border-radius:12px;
-padding:15px;
-margin-bottom:12px;
-display:flex;
-justify-content:space-between;
-align-items:center;
-}
+      .fecha {
+        font-weight: 600;
+      }
 
-.fecha{
-font-weight:600;
-}
+      button {
+        background: var(--primary);
+        border: none;
+        color: white;
+        padding: 8px 14px;
+        border-radius: 8px;
+        cursor: pointer;
+      }
 
-button{
-background:var(--primary);
-border:none;
-color:white;
-padding:8px 14px;
-border-radius:8px;
-cursor:pointer;
-}
+      button:hover {
+        background: var(--primary-dark);
+      }
 
-button:hover{
-background:var(--primary-dark);
-}
+      .empty {
+        text-align: center;
+        color: var(--muted);
+        margin-top: 40px;
+      }
+      .top-actions {
+        margin-bottom: 15px;
+      }
 
+      .btn-secondary {
+        padding: 0.8rem 1rem;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: white;
+        color: var(--text);
+        font-size: 0.95rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition:
+          background 0.2s ease,
+          transform 0.1s ease;
+      }
 
-.empty{
-text-align:center;
-color:var(--muted);
-margin-top:40px;
-}
-.top-actions{
-margin-bottom:15px;
-}
+      .btn-secondary:hover {
+        background: #f1f5f9;
+      }
 
-.btn-secondary{
-padding:.8rem 1rem;
-border:1px solid var(--border);
-border-radius:12px;
-background:white;
-color:var(--text);
-font-size:.95rem;
-font-weight:500;
-cursor:pointer;
-transition:background .2s ease, transform .1s ease;
-}
+      .btn-secondary:active {
+        transform: scale(0.98);
+      }
 
-.btn-secondary:hover{
-background:#f1f5f9;
-}
+      .acciones {
+        display: flex;
+        gap: 8px;
+        margin-left: auto;
+      }
 
-.btn-secondary:active{
-transform:scale(.98);
-}
+      @media (min-width: 768px) {
+        .btn-secondary {
+          width: auto;
+        }
+      }
+    </style>
+  </head>
 
-@media(min-width:768px){
-.btn-secondary{
-width:auto;
-}
-}
-</style>
-</head>
+  <body>
+    <div class="container">
+      <div class="top-actions">
+        <button class="btn-secondary" onclick="history.back()">
+          ← Regresar
+        </button>
+      </div>
+      <h2>Historial de Inventarios - {{ sucursal|title }}</h2>
 
-<body>
+      {% if inventarios %} {% for inv in inventarios %}
 
-<div class="container">
-<div class="top-actions">
-<button class="btn-secondary" onclick="history.back()">
-← Regresar
-</button>
-</div>
-<h2>Historial de Inventarios - {{ sucursal|title }}</h2>
+      <div class="card">
+        <div class="fecha">{{ inv.fecha }}</div>
+        <div class="acciones">
+          <button onclick="verInventario('{{ inv.id }}')">Ver</button>
+          <button onclick="descargarExcel('{{ inv.id }}')">Excel</button>
+        </div>
+      </div>
 
-{% if inventarios %}
+      {% endfor %} {% else %}
 
-{% for inv in inventarios %}
+      <div class="empty">No hay inventarios registrados</div>
 
-<div class="card">
+      {% endif %}
+    </div>
 
-<div class="fecha">
-{{ inv.fecha }}
-</div>
-
-<button onclick="verInventario('{{ inv.id }}')">
-Ver
-</button>
-
-</div>
-
-{% endfor %}
-
-{% else %}
-
-<div class="empty">
-No hay inventarios registrados
-</div>
-
-{% endif %}
-
-</div>
-
-<script>
-
-function verInventario(dia){
-    window.location.href = `/inventario/{{sucursal}}/mostrar/${dia}`
-}
-
-</script>
-
-</body>
+    <script>
+      function verInventario(dia) {
+        window.location.href = `/inventario/{{sucursal}}/mostrar/${dia}`;
+      }
+      function descargarExcel(dia) {
+        window.location.href = `/crear/excel/${dia}/{{sucursal}}`;
+      }
+    </script>
+  </body>
 </html>

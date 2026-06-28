@@ -1,371 +1,328 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-<meta charset="UTF-8">
-<title>Inventario</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Inventario</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<style>
-:root {
-    --primary: #2563eb;
-    --primary-dark: #1e3a8a;
-    --danger: #dc2626;
-    --bg: #f3f4f6;
-    --card: #ffffff;
-    --border: #e5e7eb;
-    --text: #111827;
-    --muted: #6b7280;
-}
+    <style>
+      :root {
+        --primary: #2563eb;
+        --primary-dark: #1e3a8a;
+        --danger: #dc2626;
+        --bg: #f3f4f6;
+        --card: #ffffff;
+        --border: #e5e7eb;
+        --text: #111827;
+        --muted: #6b7280;
+      }
 
-body {
-    font-family: system-ui, -apple-system, sans-serif;
-    background: var(--bg);
-    margin: 0;
-    padding: 20px;
-    color: var(--text);
-}
+      body {
+        font-family:
+          system-ui,
+          -apple-system,
+          sans-serif;
+        background: var(--bg);
+        margin: 0;
+        padding: 20px;
+        color: var(--text);
+      }
 
-h1 {
-    text-align: center;
-    margin-bottom: 25px;
-    font-weight: 600;
-}
+      h1 {
+        text-align: center;
+        margin-bottom: 25px;
+        font-weight: 600;
+      }
 
-.dashboard {
-    max-width: 900px;
-    margin: auto;
-}
+      .dashboard {
+        max-width: 900px;
+        margin: auto;
+      }
 
-.card {
-    background: var(--card);
-    border-radius: 14px;
-    border: 1px solid var(--border);
-    margin-bottom: 18px;
-    overflow: hidden;
-}
+      .card {
+        background: var(--card);
+        border-radius: 14px;
+        border: 1px solid var(--border);
+        margin-bottom: 18px;
+        overflow: hidden;
+      }
 
-.card-header {
-    padding: 14px 18px;
-    font-size: 16px;
-    font-weight: 600;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    cursor: pointer;
-    background: linear-gradient(90deg, var(--primary), var(--primary-dark));
-    color: white;
-}
+      .card-header {
+        padding: 14px 18px;
+        font-size: 16px;
+        font-weight: 600;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        cursor: pointer;
+        background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+        color: white;
+      }
 
-.urgentes-header {
-    background: linear-gradient(90deg, #ef4444, #b91c1c);
-}
+      .urgentes-header {
+        background: linear-gradient(90deg, #ef4444, #b91c1c);
+      }
 
-.card-content {
-    display: none;
-    padding: 10px 18px;
-}
+      .card-content {
+        display: none;
+        padding: 10px 18px;
+      }
 
-.card-content ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
+      .card-content ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
 
-.card-content li {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 0;
-    border-bottom: 1px solid var(--border);
-    font-size: 15px;
-}
-
-.card-content li:last-child {
-    border-bottom: none;
-}
-
-.producto-nombre {
-    font-weight: 500;
-}
-
-.producto-existencia {
-    color: var(--muted);
-}
-
-.urgente {
-    color: var(--danger);
-    font-weight: 600;
-}
-
-.badge {
-    background: var(--primary);
-    color: white;
-    padding: 3px 8px;
-    border-radius: 10px;
-    font-size: 12px;
-}
-
-.badge-urgente {
-    background: var(--danger);
-}
-
-.actions {
-    display: flex;
-    justify-content: center;
-    margin: 30px auto;
-}
-
-.actions button {
-    padding: 12px 22px;
-    border-radius: 10px;
-    border: none;
-    background: var(--primary);
-    color: white;
-    font-size: 15px;
-    cursor: pointer;
-    transition: .2s;
-}
-
-.actions button:hover {
-    background: var(--primary-dark);
-}
-
-.top-bar {
-    max-width: 900px;
-    margin: auto;
-    margin-bottom: 10px;
-}
-
-.btn-regresar {
-    background: var(--primary);
-    color: white;
-    border: none;
-    padding: 8px 14px;
-    border-radius: 8px;
-    font-size: 14px;
-    cursor: pointer;
-    transition: .2s;
-}
-
-.btn-regresar:hover {
-    background: var(--primary-dark);
-}
-
-@media (max-width:600px){
-
-    h1 {
-        font-size: 22px;
-    }
-
-    .card-header {
+      .card-content li {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--border);
         font-size: 15px;
-    }
+      }
 
-    .card-content li {
+      .card-content li:last-child {
+        border-bottom: none;
+      }
+
+      .producto-nombre {
+        font-weight: 500;
+      }
+
+      .producto-existencia {
+        color: var(--muted);
+      }
+
+      .urgente {
+        color: var(--danger);
+        font-weight: 600;
+      }
+
+      .badge {
+        background: var(--primary);
+        color: white;
+        padding: 3px 8px;
+        border-radius: 10px;
+        font-size: 12px;
+      }
+
+      .badge-urgente {
+        background: var(--danger);
+      }
+
+      .actions {
+        display: flex;
+        justify-content: center;
+        margin: 30px auto;
+      }
+
+      .actions button {
+        padding: 12px 22px;
+        border-radius: 10px;
+        border: none;
+        background: var(--primary);
+        color: white;
+        font-size: 15px;
+        cursor: pointer;
+        transition: 0.2s;
+      }
+
+      .actions button:hover {
+        background: var(--primary-dark);
+      }
+
+      .top-bar {
+        max-width: 900px;
+        margin: auto;
+        margin-bottom: 10px;
+      }
+
+      .btn-regresar {
+        background: var(--primary);
+        color: white;
+        border: none;
+        padding: 8px 14px;
+        border-radius: 8px;
         font-size: 14px;
-    }
+        cursor: pointer;
+        transition: 0.2s;
+      }
 
-}
-</style>
+      .btn-regresar:hover {
+        background: var(--primary-dark);
+      }
 
-<script>
-function toggle(id) {
-    const el = document.getElementById(id);
-    el.style.display = el.style.display === "block" ? "none" : "block";
-}
+      @media (max-width: 600px) {
+        h1 {
+          font-size: 22px;
+        }
 
-function cargarUrgentes() {
+        .card-header {
+          font-size: 15px;
+        }
 
-    const urgentes = document.querySelectorAll("li.urgente");
-    const lista = document.getElementById("lista-urgentes");
-    const badge = document.getElementById("badge-urgentes");
+        .card-content li {
+          font-size: 14px;
+        }
+      }
+    </style>
 
-    lista.innerHTML = "";
+    <script>
+      function toggle(id) {
+        const el = document.getElementById(id);
+        el.style.display = el.style.display === "block" ? "none" : "block";
+      }
 
-    if (urgentes.length === 0) {
-        lista.innerHTML = "<li>No hay productos urgentes 🎉</li>";
-    } else {
-        urgentes.forEach(item => {
+      function cargarUrgentes() {
+        const urgentes = document.querySelectorAll("li.urgente");
+        const lista = document.getElementById("lista-urgentes");
+        const badge = document.getElementById("badge-urgentes");
+
+        lista.innerHTML = "";
+
+        if (urgentes.length === 0) {
+          lista.innerHTML = "<li>No hay productos urgentes 🎉</li>";
+        } else {
+          urgentes.forEach((item) => {
             lista.appendChild(item.cloneNode(true));
-        });
-    }
+          });
+        }
 
-    badge.textContent = urgentes.length;
-}
+        badge.textContent = urgentes.length;
+      }
 
-window.onload = cargarUrgentes;
-</script>
+      window.onload = cargarUrgentes;
+    </script>
+  </head>
 
-</head>
+  <body>
+    <div class="top-bar">
+      <button class="btn-regresar" onclick="history.back()">← Regresar</button>
+    </div>
 
-<body>
-
-<div class="top-bar">
-    <button class="btn-regresar" onclick="history.back()">
-        ← Regresar
-    </button>
-</div>
-
-{% if dia %}
-{% set partes = dia.split('-') %}
-{% set meses = {
-    '01': 'enero',
-    '02': 'febrero',
-    '03': 'marzo',
-    '04': 'abril',
-    '05': 'mayo',
-    '06': 'junio',
-    '07': 'julio',
-    '08': 'agosto',
-    '09': 'septiembre',
-    '10': 'octubre',
-    '11': 'noviembre',
-    '12': 'diciembre'
-} %}
-<h1>
-Inventario {{ partes[0] }} de {{ meses[partes[1]] }} de {{partes[2]}} - {{ partes[3]|capitalize }}
-</h1>
-{% else %}
-<h1>Inventario</h1>
-{% endif %}
-
-{% if mensaje %}
-<div class="card">
-    <div style="padding:20px;text-align:center;font-size:18px;">
+    {% if dia %} {% set partes = dia.split('-') %} {% set meses = { '01':
+    'enero', '02': 'febrero', '03': 'marzo', '04': 'abril', '05': 'mayo', '06':
+    'junio', '07': 'julio', '08': 'agosto', '09': 'septiembre', '10': 'octubre',
+    '11': 'noviembre', '12': 'diciembre' } %}
+    <h1>
+      Inventario {{ partes[0] }} de {{ meses[partes[1]] }} de {{partes[2]}} - {{
+      partes[3]|capitalize }}
+    </h1>
+    {% else %}
+    <h1>Inventario</h1>
+    {% endif %} {% if mensaje %}
+    <div class="card">
+      <div style="padding: 20px; text-align: center; font-size: 18px">
         {{ mensaje }}
+      </div>
     </div>
-</div>
-{% endif %}
+    {% endif %}
 
-<div class="dashboard">
-{% if favoritos %}
-<div class="card">
+    <div class="dashboard">
+      {% if favoritos %}
+      <div class="card">
+        <div class="card-header" onclick="toggle('favoritos')">
+          ⭐ Favoritos
+          <span class="badge"> {{ favoritos|length }} </span>
+        </div>
 
-    <div class="card-header"
-         onclick="toggle('favoritos')">
-        ⭐ Favoritos
-        <span class="badge">
-            {{ favoritos|length }}
-        </span>
-    </div>
+        <div class="card-content" id="favoritos">
+          <ul>
+            {% for prod in favoritos %}
 
-    <div class="card-content"
-         id="favoritos">
+            <li>
+              <span class="producto-nombre"> {{ prod.id | title }} </span>
 
-        <ul>
-
-        {% for prod in favoritos %}
-
-        <li>
-
-            <span class="producto-nombre">
-                {{ prod.id | title }}
-            </span>
-
-            <div style="display:flex; flex-direction:column; align-items:flex-end;">
-
+              <div
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  align-items: flex-end;
+                "
+              >
                 <span class="producto-existencia">
-                    {{ "%.10g"|format(prod.existencia) }}
-                    {{ prod.unidad }}
+                  {{ "%.10g"|format(prod.existencia) }} {{ prod.unidad }}
                 </span>
 
-                <span style="font-size:13px; color:#6b7280;">
-                    Se acabó:
-                    {{ "%.10g"|format(prod.se_acabo) }}
-                    {{ prod.unidad }}
+                <span style="font-size: 13px; color: #6b7280">
+                  Se acabó: {{ "%.10g"|format(prod.se_acabo) }} {{ prod.unidad
+                  }}
+                </span>
+              </div>
+
+              {% if prod.urge %}
+              <span class="badge badge-urgente"> URGE </span>
+              {% endif %}
+            </li>
+
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+      {% endif %}
+      <!-- URGENTES -->
+      <div class="card">
+        <div class="card-header urgentes-header" onclick="toggle('urgentes')">
+          🚨 Urgentes
+          <span class="badge" id="badge-urgentes">0</span>
+        </div>
+
+        <div class="card-content" id="urgentes">
+          <ul id="lista-urgentes"></ul>
+        </div>
+      </div>
+
+      {% if inventario %} {% for categoria, productos in inventario.items() %}
+
+      <div class="card">
+        <div class="card-header" onclick="toggle('{{ categoria }}')">
+          {{ categoria|capitalize }}
+          <span class="badge">{{ productos|length }}</span>
+        </div>
+
+        <div class="card-content" id="{{ categoria }}">
+          <ul>
+            {% for prod in productos %}
+
+            <li class="{% if prod.urge %}urgente{% endif %}">
+              <span class="producto-nombre"> {{ prod.id | title }} </span>
+
+              <div
+                style="
+                  display: flex;
+                  flex-direction: column;
+                  align-items: flex-end;
+                "
+              >
+                <span class="producto-existencia">
+                  {{ "%.10g"|format(prod.existencia) }} {{ prod.unidad }}
                 </span>
 
-            </div>
+                <span style="font-size: 13px; color: #6b7280">
+                  Se acabó: {{ "%.10g"|format(prod.se_acabo) }} {{ prod.unidad
+                  }}
+                </span>
+              </div>
 
-            {% if prod.urge %}
-            <span class="badge badge-urgente">
-                URGE
-            </span>
-            {% endif %}
+              {% if prod.urge %}
+              <span class="badge badge-urgente">URGE</span>
+              {% endif %}
+            </li>
 
-        </li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
 
-        {% endfor %}
+      {% endfor %} {% endif %}
 
-        </ul>
-
+      <div class="actions">
+        <button onclick="window.location.href = '/inventario/'">
+          Regresar al inicio
+        </button>
+      </div>
     </div>
-
-</div>
-{% endif %}
-<!-- URGENTES -->
-<div class="card">
-    <div class="card-header urgentes-header" onclick="toggle('urgentes')">
-        🚨 Urgentes
-        <span class="badge" id="badge-urgentes">0</span>
-    </div>
-
-    <div class="card-content" id="urgentes">
-        <ul id="lista-urgentes"></ul>
-    </div>
-</div>
-
-{% if inventario %}
-
-{% for categoria, productos in inventario.items() %}
-
-<div class="card">
-
-<div class="card-header" onclick="toggle('{{ categoria }}')">
-{{ categoria|capitalize }}
-<span class="badge">{{ productos|length }}</span>
-</div>
-
-<div class="card-content" id="{{ categoria }}">
-
-<ul>
-
-{% for prod in productos %}
-
-<li class="{% if prod.urge %}urgente{% endif %}">
-
-<span class="producto-nombre">
-{{ prod.id | title }}
-</span>
-
-<div style="display:flex; flex-direction:column; align-items:flex-end;">
-
-    <span class="producto-existencia">
-        {{ "%.10g"|format(prod.existencia) }} {{ prod.unidad }}
-    </span>
-
-    <span style="font-size:13px; color:#6b7280;">
-        Se acabó: {{ "%.10g"|format(prod.se_acabo) }} {{ prod.unidad }}
-    </span>
-
-</div>
-
-
-{% if prod.urge %}
-<span class="badge badge-urgente">URGE</span>
-{% endif %}
-
-</li>
-
-{% endfor %}
-
-</ul>
-
-</div>
-
-</div>
-
-{% endfor %}
-
-{% endif %}
-
-<div class="actions">
-<button onclick="window.location.href='/inventario/'">
-Regresar al inicio
-</button>
-</div>
-
-</div>
-
-</body>
+  </body>
 </html>

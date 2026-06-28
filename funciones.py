@@ -15,7 +15,11 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from reportlab.lib import colors
 from textwrap import wrap
-
+from openpyxl import load_workbook
+from openpyxl.styles import Font, Alignment, PatternFill
+from openpyxl.worksheet.table import Table, TableStyleInfo
+from openpyxl.utils import get_column_letter
+import pandas as pd
 load_dotenv()
 
 def get_firestore():
@@ -1216,7 +1220,124 @@ def eliminar_negocio(negocio_id):
     if not ref.get().exists:
         raise ValueError('El negocio no existe')
     ref.delete() 
+    
+    
+def crear_excel_inventario(inventario,sucursal,dia,elaborado_por):
+    filas=[]
+    dia_texto=dia[:10]
+    for categoria,productos in inventario.items():
+        for producto in productos:
+            fila=producto.copy()
+            fila['categoria']=categoria
+            filas.append(fila)
+            
+    df=pd.DataFrame(filas)
+    df = df[
+    [
+        "categoria",
+        "producto",
+        "existencia",
+        "unidad",
+        "se_acabo"
+    ]
+]
+    df = df.rename(
+    columns={
+        "categoria": "Categoria",
+        "producto": "Producto",
+        "existencia": "Existencia",
+        "unidad": "Unidad",
+        "se_acabo": "Se acabó"
+    }
+)
+    df = df.sort_values(["Categoria", "Producto"])
+    df["Categoria"] = df["Categoria"].str.capitalize()
+    df["Producto"] = df["Producto"].str.capitalize()
+    archivo=f'{dia}.xlsx'
+    df.to_excel(archivo,index=False,startrow=5)
+    # Abrir el archivo para editarlo
+    wb = load_workbook(archivo)
+    ws = wb.active
+    ultima_fila = ws.max_row
+    tabla = Table(
+    displayName="Inventario",
+    ref=f"A6:E{ultima_fila}"
+)
 
+    estilo = TableStyleInfo(
+        name="TableStyleMedium2",  # Prueba otros estilos
+        showFirstColumn=False,
+        showLastColumn=False,
+        showRowStripes=True,
+        showColumnStripes=False
+    )
+
+    tabla.tableStyleInfo = estilo
+    ws.add_table(tabla)
+    # Título
+    ws["A1"] = "INVENTARIO TIME"
+    ws["A1"].font = Font(size=16, bold=True)
+
+    # Información
+    ws["A2"] = f"Sucursal: {sucursal.capitalize()}"
+    ws["A3"] = f"Fecha: {dia_texto}"
+    ws['A4'] = f"Elaborado por: {elaborado_por}"
+
+    # Centrar y combinar celdas para el título
+    ws.merge_cells("A1:E1")
+    ws["A1"].alignment = Alignment(horizontal="center")
+    for columna in ws.iter_cols(min_row=6):
+        letra = get_column_letter(columna[0].column)
+        longitud = max(len(str(cell.value or "")) for cell in columna)
+        ws.column_dimensions[letra].width = longitud + 3
+    colores_disponibles = [
+    "F4CCCC",  # rojo claro
+    "D9EAD3",  # verde claro
+    "CFE2F3",  # azul claro
+    "FFF2CC",  # amarillo claro
+    "D9D2E9",  # morado claro
+    "FCE5CD",  # naranja claro
+    "D0E0E3",  # azul gris
+    "EAD1DC",  # rosa
+    "D9EAD3",  # verde menta
+    "C9DAF8",  # azul pastel
+    "FFE599",  # amarillo intenso suave
+    "B6D7A8",  # verde medio
+    "A4C2F4",  # azul medio
+    "F9CB9C",  # durazno
+    "B4A7D6",  # lila
+    "A2C4C9",  # turquesa suave
+    "EA9999",  # rojo pastel
+    "93C47D",  # verde pastel
+    "9FC5E8",  # celeste
+    "FFD966",  # dorado suave
+]
+
+    categorias_colores = {}
+    indice = 0
+
+    for fila in range(7, ws.max_row + 1):
+
+        categoria = str(ws[f"A{fila}"].value)
+
+        if categoria not in categorias_colores:
+            categorias_colores[categoria] = colores_disponibles[
+                indice % len(colores_disponibles)
+            ]
+            indice += 1
+
+        color = PatternFill(
+            start_color=categorias_colores[categoria],
+            end_color=categorias_colores[categoria],
+            fill_type="solid"
+        )
+
+        for col in range(1, 6):
+            ws.cell(fila, col).fill = color
+        for cell in ws[6]:
+            cell.alignment = Alignment(horizontal="center")
+    wb.save(archivo)
+    return archivo
 if __name__=='__main__':
     #agregar_a_favoritos('Prueba1','carne','arrachera',True)
     #crear_producto_3('carne','arrachera','kg',0,10,'Prueba1')
